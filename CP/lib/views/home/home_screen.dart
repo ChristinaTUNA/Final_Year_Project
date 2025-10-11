@@ -1,3 +1,4 @@
+import 'package:cookit/views/home/widgets/home_cooknow_section.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../viewmodels/home_viewmodel.dart';
@@ -31,7 +32,7 @@ class HomeScreen extends StatelessWidget {
                     bottomRight: Radius.circular(24),
                   ),
                 ),
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+                padding: const EdgeInsets.fromLTRB(32, 32, 32, 36),
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -75,6 +76,22 @@ class HomeScreen extends StatelessWidget {
                   },
                 ),
               ),
+
+              const SizedBox(height: 48),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  'Cook Now',
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              HomeCookNowSection(recipes: viewModel.cookNowMeals),
 
               const SizedBox(height: 48),
             ],

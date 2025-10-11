@@ -3,7 +3,7 @@ import '../models/recipe_model.dart';
 class HomeViewModel {
   final List<Recipe> quickMeals = [
     Recipe(
-      image: 'assets/images/spaghetti.jpg',
+      image: 'assets/images/onboarding_1.webp',
       title: 'Creamy Spaghetti',
       subtitle1: 'Pasta',
       subtitle2: 'Quick & Easy',
@@ -11,7 +11,7 @@ class HomeViewModel {
       time: '15 min',
     ),
     Recipe(
-      image: 'assets/images/salad.jpg',
+      image: 'assets/images/onboarding_1.webp',
       title: 'Fresh Salad Bowl',
       subtitle1: 'Healthy',
       subtitle2: 'Light',
@@ -22,7 +22,7 @@ class HomeViewModel {
 
   final List<Recipe> cookNowMeals = [
     Recipe(
-      image: 'assets/images/friedrice.jpg',
+      image: 'assets/images/onboarding_1.webp',
       title: 'Fried Rice',
       subtitle1: 'Asian',
       subtitle2: 'Comfort Food',
@@ -30,7 +30,7 @@ class HomeViewModel {
       time: '20 min',
     ),
     Recipe(
-      image: 'assets/images/soup.jpg',
+      image: 'assets/images/onboarding_1.webp',
       title: 'Tomato Soup',
       subtitle1: 'Soup',
       subtitle2: 'Hot & Fresh',
