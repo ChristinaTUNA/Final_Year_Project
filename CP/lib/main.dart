@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_router.dart'; // ⬅️ for cleaner route management
 
 void main() {
-  runApp(const ProviderScope(child: CookitApp()));
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-class CookitApp extends ConsumerWidget {
-  const CookitApp({super.key});
+class MyApp extends ConsumerWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,7 +20,7 @@ class CookitApp extends ConsumerWidget {
         fontFamily: 'Poppins', // optional global font
       ),
       initialRoute: AppRouter.initialRoute,
-      onGenerateRoute: AppRouter.generateRoute, // 💡 central navigation control
+      onGenerateRoute: AppRouter.generateRoute, // central navigation control
     );
   }
 }

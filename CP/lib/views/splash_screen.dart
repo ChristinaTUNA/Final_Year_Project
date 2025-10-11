@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../viewmodels/splash_viewmodel.dart';
-import 'welcome_screen.dart';
+import 'welcome/welcome_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -89,7 +89,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                   const SizedBox(height: 25),
 
-                  // 🍳 App Name
+                  // App Name
                   Text(
                     'COOKIT',
                     style: GoogleFonts.lilitaOne(

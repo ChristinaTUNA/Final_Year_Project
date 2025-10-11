@@ -1,9 +1,10 @@
+import 'package:cookit/views/root_shell.dart';
 import 'package:flutter/material.dart';
 import 'views/splash_screen.dart';
-import 'views/welcome_screen.dart';
+import 'views/welcome/welcome_screen.dart';
 import 'views/onboarding/onboarding_screen.dart';
-import 'views/login_screen.dart';
-import 'views/root_shell.dart';
+import 'views/login/login_screen.dart';
+// import 'views/root_shell.dart';
 
 class AppRouter {
   static const String initialRoute = '/';
@@ -16,10 +17,10 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const WelcomeScreen());
       case '/onboarding':
         return MaterialPageRoute(builder: (_) => const OnboardingScreen());
-      // case '/login':
-      //   return MaterialPageRoute(builder: (_) => const LoginScreen());
-      // case '/home':
-      //   return MaterialPageRoute(builder: (_) => const RootShell());
+      case '/login':
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+      case '/home':
+        return MaterialPageRoute(builder: (_) => const RootShell());
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(

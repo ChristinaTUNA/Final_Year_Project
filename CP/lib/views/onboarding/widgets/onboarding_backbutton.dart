@@ -1,35 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../viewmodels/onboarding_viewmodel.dart';
 
-/// Back arrow positioned at top-left of onboarding
-class OnboardingBackButton extends ConsumerWidget {
-  final PageController controller;
-
-  const OnboardingBackButton({super.key, required this.controller});
+class OnboardingBackbutton extends StatelessWidget {
+  final VoidCallback onPressed;
+  const OnboardingBackbutton({super.key, required this.onPressed});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentPage = ref.watch(onboardingProvider);
-    final viewModel = ref.read(onboardingProvider.notifier);
-
-    return Positioned(
-      top: 50,
-      left: 16,
-      child: SafeArea(
-        child: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 28),
-          onPressed: () {
-            if (currentPage > 0) {
-              controller.previousPage(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-              viewModel.setPage(currentPage - 1);
-            } else {
-              Navigator.pop(context);
-            }
-          },
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(28.0),
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: GestureDetector(
+            onTap: onPressed,
+            child: Container(
+              padding: const EdgeInsets.all(4.0),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.6),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.chevron_left, size: 32),
+                onPressed: onPressed,
+                tooltip: 'Back',
+              ),
+            ),
+          ),
         ),
       ),
     );

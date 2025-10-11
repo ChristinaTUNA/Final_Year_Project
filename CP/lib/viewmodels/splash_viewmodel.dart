@@ -10,7 +10,7 @@ class SplashViewModel extends Notifier<bool> {
   bool build() {
     // Schedule after build to avoid side effects during initialization
     Future<void>.microtask(() async {
-      await Future<void>.delayed(const Duration(seconds: 2));
+      await Future<void>.delayed(const Duration(seconds: 4));
       state = true; // Notify splash finished
     });
     return false;

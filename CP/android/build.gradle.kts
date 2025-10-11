@@ -1,7 +1,23 @@
+buildscript {
+     val kotlinVersion = "2.0.21"
+
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://maven.aliyun.com/repository/public") } // mirror if needed
+    }
+
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.13.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+    }
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://maven.aliyun.com/repository/public") }
     }
 }
 

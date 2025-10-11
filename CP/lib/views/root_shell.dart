@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
+import 'home/home_screen.dart';
 import 'explore_screen.dart';
 
 class RootShell extends StatefulWidget {
