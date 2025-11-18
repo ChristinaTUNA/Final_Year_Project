@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'app_router.dart'; // ⬅️ for cleaner route management
+import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -14,13 +21,15 @@ class MyApp extends ConsumerWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'COOKIT',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFFE02200), // red accent for consistency
-        fontFamily: 'Poppins', // optional global font
-      ),
+
+      // Theme
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+
+      // Routing
       initialRoute: AppRouter.initialRoute,
-      onGenerateRoute: AppRouter.generateRoute, // central navigation control
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }

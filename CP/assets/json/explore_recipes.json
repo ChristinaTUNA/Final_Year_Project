@@ -1,0 +1,38 @@
+[
+  {
+    "id": 649940,
+    "title": "Lentil Veggie Burgers",
+    "image": "https://img.spoonacular.com/recipes/649940-556x370.jpg",
+    "rating": 5.0,
+    "time": "45 mins",
+    "subtitle1": "dairy free",
+    "subtitle2": "American"
+  },
+  {
+    "id": 647113,
+    "title": "Homemade Strawberry Poptarts",
+    "image": "https://img.spoonacular.com/recipes/647113-556x370.jpg",
+    "rating": 4.8,
+    "time": "45 mins",
+    "subtitle1": "Kid Friendly",
+    "subtitle2": "Brunch"
+  },
+  {
+    "id": 636230,
+    "title": "Broccoli with cheese soup",
+    "image": "https://img.spoonacular.com/recipes/636230-556x370.jpg",
+    "rating": 4.9,
+    "time": "30 mins",
+    "subtitle1": "Vegetarian",
+    "subtitle2": "Side Dish"
+  },
+  {
+    "id": 716429,
+    "title": "Pasta with Pesto",
+    "image": "https://img.spoonacular.com/recipes/716429-556x370.jpg",
+    "rating": 4.7,
+    "time": "20 mins",
+    "subtitle1": "Vegetarian",
+    "subtitle2": "Dinner"
+  }
+]
