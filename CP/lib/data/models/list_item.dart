@@ -1,42 +1,48 @@
 class ListItem {
+  final String id; // Useful for Firestore updates/deletes
   final String name;
   final String? quantity;
-  final String? brand;
   final bool done;
+  final String? category; // e.g., "Pantry" or "Shopping"
 
   ListItem({
+    String? id,
     required this.name,
     this.quantity,
-    this.brand,
     this.done = false,
-  });
+    this.category,
+  }) : id = id ?? name; // Use name as ID if null (simple approach)
 
-  ListItem copyWith({
-    String? name,
-    String? quantity,
-    String? brand,
-    bool? done,
-  }) {
+  /// Convert ListItem to a Map for Firestore storage
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'quantity': quantity,
+      'done': done,
+      'category': category,
+      'updatedAt': DateTime.now().toIso8601String(),
+    };
+  }
+
+  /// Factory constructor to create ListItem from Firestore document
+  factory ListItem.fromMap(Map<String, dynamic> map, String docId) {
     return ListItem(
-      name: name ?? this.name,
-      quantity: quantity ?? this.quantity,
-      brand: brand ?? this.brand,
-      done: done ?? this.done,
+      id: docId,
+      name: map['name'] ?? '',
+      quantity: map['quantity'],
+      done: map['done'] ?? false,
+      category: map['category'],
     );
   }
 
-  // optional for Firebase integration
-  factory ListItem.fromJson(Map<String, dynamic> json) => ListItem(
-        name: json['name'],
-        quantity: json['quantity'],
-        brand: json['brand'],
-        done: json['done'] ?? false,
-      );
-
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'quantity': quantity,
-        'brand': brand,
-        'done': done,
-      };
+// Create a copy with modified fields
+  ListItem copyWith({bool? done, String? quantity}) {
+    return ListItem(
+      id: id,
+      name: name,
+      quantity: quantity ?? this.quantity,
+      done: done ?? this.done,
+      category: category,
+    );
+  }
 }

@@ -27,14 +27,10 @@ class _AddItemDialogState extends State<AddItemDialog> {
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
       final item = ListItem(
-        name: _nameController.text.trim(),
-        quantity: _quantityController.text.trim().isEmpty
-            ? null
-            : _quantityController.text.trim(),
-        brand: _brandController.text.trim().isEmpty
-            ? null
-            : _brandController.text.trim(),
-      );
+          name: _nameController.text.trim(),
+          quantity: _quantityController.text.trim().isEmpty
+              ? null
+              : _quantityController.text.trim());
       Navigator.of(context).pop(item);
     }
   }

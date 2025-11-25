@@ -19,7 +19,7 @@ class PillTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = AppTextStyles.button.copyWith(
+    final textStyle = AppTextStyles.labelLarge.copyWith(
       color: selected ? AppColors.white : AppColors.primary,
     );
 

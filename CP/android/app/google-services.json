@@ -12,7 +12,20 @@
           "package_name": "com.example.cookit_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1003973879556-esj8qfl672dg1etv0r3cp6matesrelkv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cookit_app",
+            "certificate_hash": "ae5b8c1637bfeaadf336e6eac408e9601c0bc04e"
+          }
+        },
+        {
+          "client_id": "1003973879556-rimfhn4shbl3dj6er3phhnetj4ap4b1u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCK6_w64WWvCY8NDKdCYIa7GtCmjHyMzUE"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1003973879556-rimfhn4shbl3dj6er3phhnetj4ap4b1u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1003973879556-ss19k69j6spmo0ih61s6tk8fc2rol3n0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cookitApp"
+              }
+            }
+          ]
         }
       }
     }

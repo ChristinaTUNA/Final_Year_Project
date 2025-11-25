@@ -1,6 +1,8 @@
 // lib/features/recipe/recipe_viewmodel.dart
+import 'package:cookit/data/models/list_item.dart';
 import 'package:cookit/data/models/recipe_model.dart';
 import 'package:cookit/data/services/recipe_service.dart';
+import 'package:cookit/data/services/user_database_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -119,8 +121,25 @@ class RecipeViewModel extends FamilyAsyncNotifier<RecipeState, int> {
     );
   }
 
-  List<IngredientItem> getSelectedShoppingItems() {
-    return state.value!.ingredients.where((item) => item.selected).toList();
+  Future<int> addSelectedToShoppingList() async {
+    final selectedItems =
+        state.value!.ingredients.where((item) => item.selected).toList();
+
+    if (selectedItems.isEmpty) return 0;
+
+    // 1. Map to ListItems
+    final listItems = selectedItems
+        .map((e) => ListItem(name: e.name, quantity: e.amount))
+        .toList();
+
+    // 2. Access the Database Service directly
+    final dbService = ref.read(userDatabaseServiceProvider);
+
+    // 3. Add to Firestore (The ListsViewModel will automatically pick this up via stream)
+    await dbService.addItems(listItems, 'shopping_list');
+    clearSelections();
+
+    return listItems.length;
   }
 }
 

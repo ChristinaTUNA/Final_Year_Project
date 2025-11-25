@@ -1,11 +1,13 @@
+import 'package:cookit/features/login/register_screen.dart';
+import 'package:cookit/features/login/login_screen.dart';
 import 'package:cookit/features/recipe/recipe_screen.dart';
-import 'package:cookit/features/scan_screen.dart';
+import 'package:cookit/features/scan/scan_screen.dart';
 import 'package:flutter/material.dart';
 import '../../features/splash screen/splash_screen.dart';
-import '../../features/welcome/welcome_screen.dart';
-import '../../features/intro/intro_screen.dart';
-import '../../features/login/login_screen.dart';
-import '../../features/root_shell.dart';
+// import '../../features/welcome/welcome_screen.dart';
+// import '../../features/intro/intro_screen.dart';
+import '../../features/login/auth_landing_screen.dart';
+import '../../features/shared/root_shell.dart';
 import '../../features/preference/preference_screen.dart';
 
 class AppRouter {
@@ -15,12 +17,16 @@ class AppRouter {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(builder: (_) => const SplashScreen());
-      case '/welcome':
-        return MaterialPageRoute(builder: (_) => const WelcomeScreen());
-      case '/intro':
-        return MaterialPageRoute(builder: (_) => const IntroScreen());
+      // case '/welcome':
+      //   return MaterialPageRoute(builder: (_) => const WelcomeScreen());
+      // case '/intro':
+      //   return MaterialPageRoute(builder: (_) => const IntroScreen());
+      case '/auth_landing':
+        return MaterialPageRoute(builder: (_) => const AuthLandingScreen());
       case '/login':
         return MaterialPageRoute(builder: (_) => const LoginScreen());
+      case '/register':
+        return MaterialPageRoute(builder: (_) => const RegisterScreen());
       case '/preference':
         return MaterialPageRoute(builder: (_) => const PreferenceScreen());
       case '/home':

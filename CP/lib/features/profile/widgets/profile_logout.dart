@@ -11,7 +11,7 @@ class LogoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = AppTextStyles.button.copyWith(
+    final textStyle = AppTextStyles.labelLarge.copyWith(
       color: AppColors.primary,
       fontWeight: FontWeight.w700,
     );

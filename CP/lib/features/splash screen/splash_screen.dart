@@ -1,9 +1,9 @@
+import 'package:cookit/features/login/auth_landing_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'splash_viewmodel.dart';
-import '../welcome/welcome_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -51,6 +51,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Pre-cache the image that will be used on the next screen.
+    // This loads the image into memory while the splash screen is visible.
+    precacheImage(const AssetImage('assets/images/onboarding_1.webp'), context);
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -65,7 +73,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+          MaterialPageRoute(builder: (_) => const AuthLandingScreen()),
         );
       });
     }
@@ -81,7 +89,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // 🧑‍🍳 Logo Image
+                  // Logo Image
                   Image.asset(
                     'assets/images/chef_mato.png',
                     width: 200,

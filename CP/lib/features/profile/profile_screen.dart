@@ -26,7 +26,7 @@ class ProfileScreen extends ConsumerWidget {
 
     if (context.mounted) {
       Navigator.of(context).pushNamedAndRemoveUntil(
-        '/welcome',
+        '/login',
         (route) => false,
       );
     }

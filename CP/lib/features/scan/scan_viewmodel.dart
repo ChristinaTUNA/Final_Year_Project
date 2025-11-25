@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../data/models/scanned_ingredient_model.dart';
-import '../../data/services/gemini_service.dart';
+import '../../data/models/scanned_ingredient.dart';
+import '../../../data/services/gemini_service.dart';
 
 /// This "brain" manages the state for the ScanScreen.
 /// It holds the loading/error/data state for the API call.

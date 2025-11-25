@@ -1,9 +1,9 @@
-import 'lists/lists_screen.dart';
+import '../lists/lists_screen.dart';
 import 'package:flutter/material.dart';
-import 'home/home_screen.dart';
-import 'explore/explore_screen.dart';
-import 'profile/profile_screen.dart';
-import 'chatbot/chatbot_screen.dart';
+import '../home/home_screen.dart';
+import '../explore/explore_screen.dart';
+import '../profile/profile_screen.dart';
+import '../chatbot/chatbot_screen.dart';
 
 class RootShell extends StatefulWidget {
   const RootShell({super.key});

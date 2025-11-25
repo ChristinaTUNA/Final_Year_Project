@@ -36,31 +36,61 @@ class AppTheme {
 
     // --- Text Theme ---
     textTheme: TextTheme(
-      headlineLarge: AppTextStyles.hero.copyWith(color: AppColors.textDark),
-      displayLarge: AppTextStyles.heading1.copyWith(color: AppColors.textDark),
-      displayMedium: AppTextStyles.heading2.copyWith(color: AppColors.textDark),
-      displaySmall: AppTextStyles.heading3.copyWith(color: AppColors.textDark),
-      titleMedium: AppTextStyles.subtitle.copyWith(color: AppColors.textDark),
-      titleSmall: AppTextStyles.bodyBold.copyWith(color: AppColors.textDark),
-      bodyLarge: AppTextStyles.body.copyWith(color: AppColors.textDark),
-      bodyMedium: AppTextStyles.body.copyWith(color: AppColors.textGray),
-      bodySmall: AppTextStyles.caption.copyWith(color: AppColors.textLightGray),
-      labelLarge: AppTextStyles.button.copyWith(color: AppColors.white),
+      // 1. DISPLAY (Hero / Huge text)
+      displayLarge: AppTextStyles.displayLarge
+          .copyWith(color: AppColors.textDark), // 56px
+      displayMedium: AppTextStyles.displayMedium
+          .copyWith(color: AppColors.textDark), // 32px
+      displaySmall: AppTextStyles.displaySmall
+          .copyWith(color: AppColors.textDark), // 28px
+
+      // 2. HEADLINE (Screen titles)
+      headlineLarge: AppTextStyles.headlineLarge
+          .copyWith(color: AppColors.textDark), // 24px
+      headlineMedium: AppTextStyles.headlineMedium
+          .copyWith(color: AppColors.textDark), // 22px
+      headlineSmall: AppTextStyles.headlineSmall
+          .copyWith(color: AppColors.textDark), // 20px
+
+      // 3. TITLE (Card titles, Section headers)
+      titleLarge:
+          AppTextStyles.titleLarge.copyWith(color: AppColors.textDark), // 18px
+      titleMedium:
+          AppTextStyles.titleMedium.copyWith(color: AppColors.textDark), // 16px
+      titleSmall:
+          AppTextStyles.titleSmall.copyWith(color: AppColors.textDark), // 14px
+
+      // 4. BODY (Paragraphs, Lists)
+      bodyLarge:
+          AppTextStyles.bodyLarge.copyWith(color: AppColors.textDark), // 16px
+      bodyMedium:
+          AppTextStyles.bodyMedium.copyWith(color: AppColors.textGray), // 14px
+      bodySmall: AppTextStyles.bodySmall
+          .copyWith(color: AppColors.textLightGray), // 12px
+
+      // 5. LABEL (Buttons, Chips)
+      labelLarge:
+          AppTextStyles.labelLarge.copyWith(color: AppColors.white), // 16px
+      labelMedium:
+          AppTextStyles.labelMedium.copyWith(color: AppColors.textGray), // 12px
     ),
 
     // --- Component Themes ---
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.primary,
-      foregroundColor: AppColors.white,
+      backgroundColor: AppColors.background,
+      foregroundColor: AppColors.textDark,
       elevation: 0,
-      titleTextStyle: AppTextStyles.heading2.copyWith(color: AppColors.white),
+      // Uses Headline Large (24px) for App Bar titles
+      titleTextStyle:
+          AppTextStyles.headlineLarge.copyWith(color: AppColors.textDark),
     ),
 
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
-        textStyle: AppTextStyles.button,
+        // Uses Label Large (16px w600) for buttons
+        textStyle: AppTextStyles.labelLarge,
         padding: const EdgeInsets.symmetric(
           vertical: AppSpacing.md,
           horizontal: AppSpacing.lg,
@@ -71,11 +101,11 @@ class AppTheme {
       ),
     ),
 
-    // --- ENHANCEMENT: Input Decoration Theme ---
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.background,
-      hintStyle: AppTextStyles.body.copyWith(color: AppColors.textLightGray),
+      hintStyle:
+          AppTextStyles.bodyMedium.copyWith(color: AppColors.textLightGray),
       contentPadding: const EdgeInsets.symmetric(
         vertical: AppSpacing.md,
         horizontal: AppSpacing.md,
@@ -112,43 +142,64 @@ class AppTheme {
       onError: AppColors.white,
     ),
 
-    // --- Icon Theme (Dark) ---
     iconTheme: const IconThemeData(
       color: AppColors.textGrayDarkTheme,
       size: 24.0,
     ),
 
-    // --- Text Theme (Dark) ---
+    // --- Text Theme (Dark Mode Mapping) ---
     textTheme: TextTheme(
-      headlineLarge:
-          AppTextStyles.hero.copyWith(color: AppColors.textDarkTheme),
+      // Display
       displayLarge:
-          AppTextStyles.heading1.copyWith(color: AppColors.textDarkTheme),
+          AppTextStyles.displayLarge.copyWith(color: AppColors.textDarkTheme),
       displayMedium:
-          AppTextStyles.heading2.copyWith(color: AppColors.textDarkTheme),
+          AppTextStyles.displayMedium.copyWith(color: AppColors.textDarkTheme),
+      displaySmall:
+          AppTextStyles.displaySmall.copyWith(color: AppColors.textDarkTheme),
+
+      // Headline
+      headlineLarge:
+          AppTextStyles.headlineLarge.copyWith(color: AppColors.textDarkTheme),
+      headlineMedium:
+          AppTextStyles.headlineMedium.copyWith(color: AppColors.textDarkTheme),
+      headlineSmall:
+          AppTextStyles.headlineSmall.copyWith(color: AppColors.textDarkTheme),
+
+      // Title
+      titleLarge:
+          AppTextStyles.titleLarge.copyWith(color: AppColors.textDarkTheme),
       titleMedium:
-          AppTextStyles.subtitle.copyWith(color: AppColors.textDarkTheme),
-      bodyLarge: AppTextStyles.body.copyWith(color: AppColors.textDarkTheme),
+          AppTextStyles.titleMedium.copyWith(color: AppColors.textDarkTheme),
+      titleSmall:
+          AppTextStyles.titleSmall.copyWith(color: AppColors.textDarkTheme),
+
+      // Body
+      bodyLarge:
+          AppTextStyles.bodyLarge.copyWith(color: AppColors.textDarkTheme),
       bodyMedium:
-          AppTextStyles.body.copyWith(color: AppColors.textGrayDarkTheme),
+          AppTextStyles.bodyMedium.copyWith(color: AppColors.textGrayDarkTheme),
       bodySmall:
-          AppTextStyles.caption.copyWith(color: AppColors.textGrayDarkTheme),
-      labelLarge: AppTextStyles.button.copyWith(color: AppColors.white),
+          AppTextStyles.bodySmall.copyWith(color: AppColors.textGrayDarkTheme),
+
+      // Label
+      labelLarge: AppTextStyles.labelLarge.copyWith(color: AppColors.white),
+      labelMedium: AppTextStyles.labelMedium
+          .copyWith(color: AppColors.textGrayDarkTheme),
     ),
 
-    // --- Component Themes (Dark) ---
     appBarTheme: AppBarTheme(
       backgroundColor: AppColors.backgroundDark,
-      foregroundColor: AppColors.white,
+      foregroundColor: AppColors.textDarkTheme,
       elevation: 0,
-      titleTextStyle: AppTextStyles.heading2.copyWith(color: AppColors.white),
+      titleTextStyle:
+          AppTextStyles.headlineLarge.copyWith(color: AppColors.textDarkTheme),
     ),
 
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
-        textStyle: AppTextStyles.button,
+        textStyle: AppTextStyles.labelLarge,
         padding: const EdgeInsets.symmetric(
           vertical: AppSpacing.md,
           horizontal: AppSpacing.lg,
@@ -159,12 +210,11 @@ class AppTheme {
       ),
     ),
 
-    // Input Decoration Theme (Dark) ---
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.cardBackgroundDark,
       hintStyle:
-          AppTextStyles.body.copyWith(color: AppColors.textGrayDarkTheme),
+          AppTextStyles.bodyMedium.copyWith(color: AppColors.textGrayDarkTheme),
       contentPadding: const EdgeInsets.symmetric(
         vertical: AppSpacing.md,
         horizontal: AppSpacing.md,

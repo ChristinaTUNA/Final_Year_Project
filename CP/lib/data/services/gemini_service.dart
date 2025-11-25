@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import '../models/scanned_ingredient_model.dart';
+import '../models/scanned_ingredient.dart';
 
 const String _openRouterApiKey =
     "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";

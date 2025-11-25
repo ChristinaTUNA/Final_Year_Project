@@ -35,12 +35,11 @@ class RecipeIngredientTile extends StatelessWidget {
                   '${ingredient.amount}  ${ingredient.name}',
                   style: textTheme.titleSmall, // (14px, w600)
                 ),
-                if (ingredient.note != null)
-                  Text(
-                    ingredient.note!,
-                    style: textTheme.bodySmall
-                        ?.copyWith(color: AppColors.textGray),
-                  ),
+                Text(
+                  ingredient.note,
+                  style:
+                      textTheme.bodySmall?.copyWith(color: AppColors.textGray),
+                ),
               ],
             ),
           ),

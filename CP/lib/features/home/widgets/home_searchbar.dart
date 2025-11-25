@@ -3,7 +3,7 @@ import 'package:cookit/core/theme/app_colors.dart';
 import 'package:cookit/core/theme/app_decoration.dart';
 import 'package:cookit/core/theme/app_spacing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../root_shell_viewmodel.dart';
+import '../../shared/root_shell_viewmodel.dart';
 
 class HomeSearchBar extends ConsumerWidget {
   const HomeSearchBar({super.key});

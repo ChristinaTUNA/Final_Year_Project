@@ -1,38 +1,23 @@
 import 'package:cookit/core/theme/app_colors.dart';
 import 'package:cookit/core/theme/app_spacing.dart';
 import 'package:cookit/core/theme/app_typography.dart';
+import 'package:cookit/features/login/widgets/login_socialbuttons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cookit/features/login/login_viewmodel.dart';
-import 'package:cookit/features/login/widgets/login_socialbuttons.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
-
-  @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isObscure = true;
+class RegisterScreen extends ConsumerWidget {
+  const RegisterScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(loginViewModelProvider);
     final viewModel = ref.read(loginViewModelProvider.notifier);
 
-    ref.listen(loginViewModelProvider, (previous, next) {
-      if (next.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(next.error!), backgroundColor: Colors.red));
-      }
-      if (next.loginSuccess) {
-        Navigator.pushNamedAndRemoveUntil(
-            context, '/preference', (route) => false);
-      }
-    });
+    // Controllers (Ideally manage these in a StatefulWidget or separate Logic)
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    final confirmController = TextEditingController();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -57,7 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               const SizedBox(height: AppSpacing.md),
               Text(
-                'Welcome back! Glad\nto see you, Again!',
+                'Hello! Register to get\nstarted',
                 style: AppTextStyles.displaySmall.copyWith(
                   color: AppColors.textDark,
                   height: 1.2,
@@ -65,11 +50,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              // Email Field
+              // Username
               TextFormField(
-                controller: _emailController,
                 decoration: const InputDecoration(
-                  hintText: 'Enter your email',
+                  hintText: 'Username',
                   fillColor: Color(0xFFF7F8F9),
                   border: OutlineInputBorder(
                     borderSide: BorderSide.none,
@@ -80,54 +64,74 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
 
-              // Password Field
+              // Email
               TextFormField(
-                controller: _passwordController,
-                obscureText: _isObscure,
-                decoration: InputDecoration(
-                  hintText: 'Enter your password',
-                  fillColor: const Color(0xFFF7F8F9),
-                  border: const OutlineInputBorder(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  hintText: 'Email',
+                  fillColor: Color(0xFFF7F8F9),
+                  border: OutlineInputBorder(
                     borderSide: BorderSide.none,
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
                   filled: true,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isObscure
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: Colors.grey,
-                    ),
-                    onPressed: () => setState(() => _isObscure = !_isObscure),
-                  ),
-                ),
-              ),
-
-              // Forgot Password
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {}, // TODO: Implement Forgot Password
-                  child: Text(
-                    'Forgot Password?',
-                    style: AppTextStyles.bodySmall.copyWith(color: Colors.grey),
-                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
 
-              // Login Button
+              // Password
+              TextFormField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: 'Password',
+                  fillColor: Color(0xFFF7F8F9),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                  ),
+                  filled: true,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              // Confirm Password
+              TextFormField(
+                controller: confirmController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: 'Confirm password',
+                  fillColor: Color(0xFFF7F8F9),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                  ),
+                  filled: true,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+
+              // Register Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
                   onPressed: state.isLoading
                       ? null
-                      : () => viewModel.signInWithEmail(
-                            _emailController.text,
-                            _passwordController.text,
-                          ),
+                      : () {
+                          if (passwordController.text ==
+                              confirmController.text) {
+                            viewModel.signInWithEmail(
+                              emailController.text,
+                              passwordController.text,
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Passwords do not match')),
+                            );
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
@@ -135,20 +139,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   child: state.isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Login'),
+                      : const Text('Register'),
                 ),
               ),
 
               const SizedBox(height: AppSpacing.xl),
-
-              // Or Login with
               Row(
                 children: [
                   const Expanded(child: Divider()),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child:
-                        Text('Or Login with', style: AppTextStyles.bodySmall),
+                    child: Text('Or Register with',
+                        style: AppTextStyles.bodySmall),
                   ),
                   const Expanded(child: Divider()),
                 ],
@@ -165,19 +167,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: AppSpacing.xxl),
-
-              // Register Now
+              // Login Link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account? "),
+                  const Text("Already have an account? "),
                   GestureDetector(
                     onTap: () =>
-                        Navigator.pushReplacementNamed(context, '/register'),
+                        Navigator.pushReplacementNamed(context, '/login'),
                     child: const Text(
-                      'Register Now',
+                      'Login Now',
                       style: TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold),

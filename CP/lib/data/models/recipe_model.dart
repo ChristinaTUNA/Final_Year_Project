@@ -3,14 +3,14 @@ class IngredientItem {
   final String name;
   final String amount;
   final String unit;
-  final String? note;
+  final String note;
   final bool selected;
 
   IngredientItem({
     required this.name,
     required this.amount,
     required this.unit,
-    this.note,
+    required this.note,
     this.selected = false,
   });
 
@@ -18,9 +18,9 @@ class IngredientItem {
   factory IngredientItem.fromSpoonacularJson(Map<String, dynamic> json) {
     return IngredientItem(
       name: json['nameClean'] ?? json['name'] ?? 'Unknown',
-      amount: (json['amount'] ?? 0.0).toString(),
+      amount: (json['amount'] ?? 0).toString(),
       unit: json['unit'] ?? '',
-      note: (json['meta'] as List<dynamic>?)?.join(', '),
+      note: json['originalName'] ?? json['original'] ?? '',
     );
   }
 
@@ -50,6 +50,7 @@ class InstructionStep {
   }
 }
 
+/// A data model for a section of instructions in a recipe.
 class InstructionSection {
   final String name;
   final List<InstructionStep> steps;

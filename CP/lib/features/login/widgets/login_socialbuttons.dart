@@ -1,62 +1,42 @@
-import 'package:cookit/core/theme/app_borders.dart';
-import 'package:cookit/core/theme/app_colors.dart';
-import 'package:cookit/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-class LoginSocialButtons extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const LoginSocialButtons({super.key, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _SocialButton(
-          iconPath: 'assets/icons/Google.png',
-          onTap: onPressed,
-        ),
-        const SizedBox(width: AppSpacing.md),
-        _SocialButton(
-          iconPath: 'assets/icons/Facebook.png',
-          onTap: onPressed,
-        ),
-        const SizedBox(width: AppSpacing.md),
-        _SocialButton(
-          iconPath: 'assets/icons/Email.png',
-          onTap: onPressed,
-        ),
-      ],
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
+class SocialLoginButton extends StatelessWidget {
   final String iconPath;
   final VoidCallback onTap;
 
-  const _SocialButton({required this.iconPath, required this.onTap});
+  const SocialLoginButton({
+    super.key,
+    required this.iconPath,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppBorders.allMd,
-        child: Container(
-          height: 56,
-          decoration: const BoxDecoration(
-            color: AppColors.primaryLight,
-            borderRadius: AppBorders.allMd,
-          ),
-          child: Center(
-            child: Image.asset(
-              iconPath,
-              width: 28,
-              height: 28,
-              fit: BoxFit.contain,
-            ),
-          ),
+    final isSvg = iconPath.endsWith('.svg');
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 100, // Fixed width
+        height: 56,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade200),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Center(
+          child: isSvg
+              ? SvgPicture.asset(
+                  iconPath,
+                  height: 24,
+                  width: 24,
+                )
+              : Image.asset(
+                  iconPath,
+                  height: 24,
+                  width: 24,
+                ),
         ),
       ),
     );

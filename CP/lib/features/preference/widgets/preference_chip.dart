@@ -21,7 +21,7 @@ class PreferenceChip extends StatelessWidget {
     final color = isSelected ? AppColors.primary : AppColors.background;
     final textColor = isSelected ? AppColors.white : AppColors.primary;
 
-    final textStyle = AppTextStyles.button.copyWith(
+    final textStyle = AppTextStyles.labelLarge.copyWith(
       color: textColor,
       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
     );

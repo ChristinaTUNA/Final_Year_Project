@@ -1,13 +1,13 @@
 import 'package:cookit/core/theme/app_colors.dart';
 import 'package:cookit/core/theme/app_spacing.dart';
-import 'package:cookit/features/home/viewmodel/home_viewmodel.dart';
-import 'package:cookit/features/home/widgets/home_categorychips.dart';
 import 'package:cookit/features/home/widgets/home_cooknow_section.dart';
-import 'package:cookit/features/home/widgets/home_header.dart';
-import 'package:cookit/features/home/widgets/home_recipecard.dart';
-import 'package:cookit/features/home/widgets/home_searchbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cookit/features/home/home_viewmodel.dart';
+import 'widgets/home_categorychips.dart';
+import 'widgets/home_header.dart';
+import 'widgets/home_recipecard.dart';
+import 'widgets/home_searchbar.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -17,84 +17,118 @@ class HomeScreen extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final theme = Theme.of(context);
 
+    // Watch the API-connected provider
     final homeStateAsync = ref.watch(homeViewModelProvider);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: homeStateAsync.when(
+        // Loading State
         loading: () => const Center(child: CircularProgressIndicator()),
+
+        // Error State
         error: (err, stack) => Center(child: Text('Error: ${err.toString()}')),
+
+        // Data State
         data: (homeState) {
           return Stack(
             children: [
-              // --- Background Colors ---
+              // 1. THE BACKGROUND LAYER
               Column(
                 children: [
+                  // The Red Header Background
                   Container(
-                    height: 160, // Height of the red header area
+                    height: 220, // Covers header + part of search bar
                     color: AppColors.primary,
                   ),
+                  // The White Body Background
                   Expanded(
                     child: Container(color: theme.scaffoldBackgroundColor),
                   ),
                 ],
               ),
 
-              // --- Scrollable Content ---
+              // 2. THE CONTENT LAYER
               SafeArea(
                 child: SingleChildScrollView(
-                  child: Padding(
-                    padding: AppSpacing.pHorizontalLg, // 24px horizontal
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const HomeHeader(),
-                        const SizedBox(height: AppSpacing.lg), // 24px
-                        const HomeSearchBar(),
-                        const SizedBox(height: AppSpacing.lg), // 24px
-                        const HomeCategoryChips(),
-                        const SizedBox(height: AppSpacing.lg), // 24px
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Wrapper for top padding
+                      Padding(
+                        padding: AppSpacing.pHorizontalLg
+                            .copyWith(top: AppSpacing.md),
+                        child: const Column(
+                          children: [
+                            HomeHeader(),
+                            SizedBox(height: AppSpacing.lg),
+                            HomeSearchBar(),
+                          ],
+                        ),
+                      ),
 
-                        Text(
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Category Chips
+                      const Padding(
+                        padding: AppSpacing.pHorizontalLg,
+                        child: HomeCategoryChips(),
+                      ),
+
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // Quick Meal Section
+                      Padding(
+                        padding: AppSpacing.pHorizontalLg,
+                        child: Text(
                           'Quick Meal',
-                          style: textTheme.displayMedium, // 24px, w700
+                          style: textTheme.headlineMedium, // 22px Bold
                         ),
-                        const SizedBox(height: AppSpacing.sm), // 8px
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
 
-                        SizedBox(
-                          height: 320,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.sm),
-                            itemCount: homeState.quickMeals.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(width: AppSpacing.md),
-                            itemBuilder: (context, index) {
-                              final recipe = homeState.quickMeals[index];
-                              return HomeRecipeCard(
-                                recipe: recipe,
-                                onTap: () {
-                                  Navigator.pushNamed(context, '/recipe',
-                                      arguments: recipe.id);
+                      // Horizontal List
+                      SizedBox(
+                        height: 280, // Adjusted height for cards
+                        child: homeState.quickMeals.isEmpty
+                            ? const Center(child: Text("No quick meals found."))
+                            : ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.lg, vertical: 8),
+                                itemCount: homeState.quickMeals.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: AppSpacing.md),
+                                itemBuilder: (context, index) {
+                                  final recipe = homeState.quickMeals[index];
+                                  return HomeRecipeCard(recipe: recipe);
                                 },
-                              );
-                            },
-                          ),
-                        ),
+                              ),
+                      ),
 
-                        Text(
+                      // Cook Now Section
+                      Padding(
+                        padding: AppSpacing.pHorizontalLg,
+                        child: Text(
                           'Cook Now',
-                          style: textTheme.displayMedium, // 24px, w700
+                          style: textTheme.headlineMedium,
                         ),
-                        const SizedBox(height: AppSpacing.md), // 16px
+                      ),
+                      const SizedBox(height: AppSpacing.md),
 
-                        HomeCookNowSection(
-                          recipe: homeState.cookNowMeals.firstOrNull,
+                      Padding(
+                        padding: AppSpacing.pHorizontalLg,
+                        child: HomeCookNowSection(
+                          // Pass the first item, or null if empty
+                          recipe: homeState.cookNowMeals.isNotEmpty
+                              ? homeState.cookNowMeals.first
+                              : null,
                         ),
-                        const SizedBox(height: AppSpacing.xxl), // 48px
-                      ],
-                    ),
+                      ),
+
+                      // Bottom padding for scrolling past FAB
+                      const SizedBox(height: 100),
+                    ],
                   ),
                 ),
               ),

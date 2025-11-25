@@ -56,12 +56,12 @@ class ListItemTile extends StatelessWidget {
             ),
           ),
 
-          // Optional quantity/brand
-          if (item.quantity != null || item.brand != null)
+          // Optional quantity
+          if (item.quantity != null)
             Padding(
               padding: const EdgeInsets.only(left: AppSpacing.sm),
               child: Text(
-                '${item.quantity ?? ''}${item.brand != null ? ' · ${item.brand}' : ''}',
+                'Qty: ${item.quantity}',
                 style: textSubtitleStyle,
               ),
             ),

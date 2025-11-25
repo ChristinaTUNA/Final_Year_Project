@@ -1,12 +1,9 @@
-// lib/features/recipe/recipe_screen.dart
 import 'package:cookit/core/theme/app_borders.dart';
 import 'package:cookit/core/theme/app_colors.dart';
 import 'package:cookit/core/theme/app_spacing.dart';
 import 'package:cookit/core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cookit/data/models/list_item.dart';
-import 'package:cookit/data/services/shopping_service.dart';
 import 'package:cookit/features/recipe/recipe_viewmodel.dart';
 import 'package:cookit/features/recipe/widgets/recipe_header.dart';
 import 'package:cookit/features/recipe/widgets/recipe_ratingbar.dart';
@@ -23,22 +20,21 @@ class RecipeScreen extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final theme = Theme.of(context);
 
-    void addToShopping() {
-      final viewModel = ref.read(recipeViewModelProvider(recipeId).notifier);
-      final items = viewModel.getSelectedShoppingItems();
-      if (items.isEmpty) return;
+    // ⬇️ CLEANER: UI only handles UI things (SnackBar)
+    Future<void> onAddToShopping() async {
+      // Call the ViewModel method
+      final count = await ref
+          .read(recipeViewModelProvider(recipeId).notifier)
+          .addSelectedToShoppingList();
 
-      final listItems =
-          items.map((e) => ListItem(name: e.name, quantity: e.amount)).toList();
-
-      ref.read(shoppingServiceProvider).addAll(listItems);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Added ${items.length} items to shopping list'),
-        ),
-      );
-      viewModel.clearSelections();
+      if (count > 0 && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Added $count items to shopping list'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
     }
 
     return Scaffold(
@@ -104,8 +100,9 @@ class RecipeScreen extends ConsumerWidget {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
+                          // ⬇️ Updated callback
                           onPressed: state.anyIngredientSelected
-                              ? addToShopping
+                              ? onAddToShopping
                               : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: state.anyIngredientSelected
@@ -114,7 +111,7 @@ class RecipeScreen extends ConsumerWidget {
                             foregroundColor: state.anyIngredientSelected
                                 ? AppColors.white
                                 : AppColors.textLightGray,
-                            textStyle: AppTextStyles.button,
+                            textStyle: AppTextStyles.labelLarge,
                             padding: const EdgeInsets.symmetric(
                                 vertical: AppSpacing.md),
                             shape: const RoundedRectangleBorder(
@@ -125,15 +122,23 @@ class RecipeScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       ExpansionTile(
-                        title: Text('Nutritions', style: textTheme.titleSmall),
-                        trailing: Text('100gr', style: textTheme.bodyMedium),
+                        title:
+                            Text('Health Score', style: textTheme.titleSmall),
+                        trailing: Text(
+                          recipe.healthScore != null
+                              ? '${recipe.healthScore!.round()}/100'
+                              : 'N/A',
+                          style: textTheme.bodyMedium,
+                        ),
                         initiallyExpanded: state.nutritionExpanded,
                         onExpansionChanged: viewModel.toggleNutrition,
                         children: [
                           Padding(
                             padding: AppSpacing.pAllSm,
                             child: Text(
-                              'Calories: 220 kcal\nProtein: 18g\nFat: 12g',
+                              recipe.healthScore != null
+                                  ? 'This recipe has a health score of ${recipe.healthScore!.round()}% according to Spoonacular.'
+                                  : 'No health score available.',
                               style: textTheme.bodyMedium,
                             ),
                           )
@@ -148,28 +153,23 @@ class RecipeScreen extends ConsumerWidget {
                             padding: AppSpacing.pAllSm,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              // 1. Map over each SECTION
                               children: recipe.instructions.map((section) {
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // 2. Display the section NAME
                                     if (section.name.isNotEmpty)
                                       Padding(
                                         padding: const EdgeInsets.symmetric(
                                             vertical: AppSpacing.sm),
                                         child: Text(
                                           section.name,
-                                          style: textTheme
-                                              .titleSmall, // 14px, w600
+                                          style: textTheme.titleSmall,
                                         ),
                                       ),
-                                    // 3. Map over each STEP in the section
                                     ...section.steps.map((step) {
                                       return Padding(
                                         padding: const EdgeInsets.symmetric(
                                             vertical: AppSpacing.xs),
-                                        // 4. Create a Row for "1. Do the thing"
                                         child: Row(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
@@ -191,7 +191,7 @@ class RecipeScreen extends ConsumerWidget {
                                           ],
                                         ),
                                       );
-                                    }).toList(),
+                                    }),
                                   ],
                                 );
                               }).toList(),
@@ -206,7 +206,7 @@ class RecipeScreen extends ConsumerWidget {
               ],
             ),
           );
-        },
+        }, //TODO CHANGED THIS PAGE LATER CHECK IN APP
       ),
     );
   }

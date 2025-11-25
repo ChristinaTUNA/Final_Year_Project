@@ -83,7 +83,8 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
             onPressed: () => viewModel.skip(context),
             child: Text(
               'Skip',
-              style: AppTextStyles.button.copyWith(color: AppColors.primary),
+              style:
+                  AppTextStyles.labelLarge.copyWith(color: AppColors.primary),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),

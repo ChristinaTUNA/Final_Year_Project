@@ -1,6 +1,6 @@
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:equatable/equatable.dart';
 
 // --- STATE ---
@@ -33,43 +33,61 @@ class LoginState extends Equatable {
 
 // --- VIEWMODEL ---
 class LoginViewModel extends StateNotifier<LoginState> {
-  LoginViewModel(this._auth) : super(const LoginState());
+  LoginViewModel(this._auth) : super(const LoginState()) {
+    _initGoogleSignIn();
+  }
 
   final FirebaseAuth _auth;
+
+  // ⬇️ FIX 1: Use the Singleton instance (v7.x standard)
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+
+  // ⬇️ FIX 2: Explicit Initialization
+  void _initGoogleSignIn() {
+    // The documentation says initialize must be called once.
+    // We do it safely here. We don't await it in the constructor,
+    // but it will be ready by the time the user clicks the button.
+    _googleSignIn.initialize();
+  }
+
+  Future<void> signInAnonymously() async {
+    state = state.copyWith(isLoading: true, error: null, loginSuccess: false);
+    try {
+      await _auth.signInAnonymously();
+      state = state.copyWith(isLoading: false, loginSuccess: true);
+    } on FirebaseAuthException catch (e) {
+      state = state.copyWith(isLoading: false, error: e.message);
+    } catch (e) {
+      state =
+          state.copyWith(isLoading: false, error: 'An unknown error occurred.');
+    }
+  }
 
   Future<void> signInWithGoogle() async {
     state = state.copyWith(isLoading: true, error: null, loginSuccess: false);
     try {
-      // 1. Trigger the Google Sign-In flow
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) {
-        // User cancelled the flow
-        state = state.copyWith(isLoading: false);
-        return;
-      }
+      GoogleSignInAccount? googleUser;
 
-      // 2. Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      // 1. Trigger the authentication flow
+      googleUser = await _googleSignIn.authenticate();
 
-      // 3. Create a new credential
+      // 2. Obtain the auth details
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+
+      // 3. Create a new credential for Firebase
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // 4. Sign in to Firebase with the credential
+      // 4. Sign in to Firebase
       await _auth.signInWithCredential(credential);
 
       state = state.copyWith(isLoading: false, loginSuccess: true);
     } on FirebaseAuthException catch (e) {
-      state = state.copyWith(
-          isLoading: false, error: 'Firebase Auth Error: ${e.message}');
+      state = state.copyWith(isLoading: false, error: e.message);
     } catch (e) {
-      state = state.copyWith(
-          isLoading: false,
-          error: 'An unexpected error occurred: ${e.toString()}',
-          loginSuccess: false);
+      state =
+          state.copyWith(isLoading: false, error: 'Google Sign-In Error: $e');
     }
   }
 
@@ -81,31 +99,27 @@ class LoginViewModel extends StateNotifier<LoginState> {
     state = state.copyWith(isLoading: true, error: null, loginSuccess: false);
 
     try {
-      // Try to sign in. If it fails because the user doesn't exist,
-      // we'll catch it and create a new account. Other errors will be
-      // caught by the general catch block.
-      try {
-        await _auth.signInWithEmailAndPassword(
-            email: email, password: password);
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'user-not-found') {
-          // If user doesn't exist, create a new account
-          await _auth.createUserWithEmailAndPassword(
-              email: email, password: password);
-        } else {
-          // Re-throw other auth errors (like wrong-password) to be caught below
-          rethrow;
-        }
-      }
-      // On success (either sign-in or sign-up), update the state
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
       state = state.copyWith(isLoading: false, loginSuccess: true);
     } on FirebaseAuthException catch (e) {
-      state = state.copyWith(
-          isLoading: false, error: 'Firebase Auth Error: ${e.message}');
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+        try {
+          await _auth.createUserWithEmailAndPassword(
+              email: email, password: password);
+          state = state.copyWith(isLoading: false, loginSuccess: true);
+        } on FirebaseAuthException catch (e2) {
+          state = state.copyWith(
+              isLoading: false, error: e2.message, loginSuccess: false);
+        }
+      } else {
+        state = state.copyWith(
+            isLoading: false, error: e.message, loginSuccess: false);
+      }
     } catch (e) {
       state = state.copyWith(
           isLoading: false,
-          error: 'An unexpected error occurred: ${e.toString()}');
+          error: 'An unexpected error occurred: ${e.toString()}',
+          loginSuccess: false);
     }
   }
 }

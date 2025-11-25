@@ -3,33 +3,81 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
-import '../models/recipe_model.dart';
+import 'package:cookit/data/models/filter_state.dart';
+import 'package:cookit/data/models/recipe_model.dart';
 
 const String _spoonacularApiKey = "35d09c6f61894bbfa03304a51c8b6269";
 
-/// This service manages fetching recipe details, implementing the
-/// Firebase caching strategy to save Spoonacular API points.
 class RecipeService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final http.Client _client = http.Client();
 
-  Future<List<Recipe>> searchRecipes(String query, String filter) async {
-    // Start building the query
-    var queryString = 'apiKey=$_spoonacularApiKey&query=$query&number=35';
+// Fetches cached recipes from Firebase Firestore.
+  Future<List<Recipe>> getCachedRecipes() async {
+    try {
+      final snapshot = await _firestore
+          .collection('recipes')
+          .limit(30) // Limit to 30 to be fast
+          .get();
 
-    // Add the filter if it's not "All"
-    if (filter != 'All') {
-      if (filter.contains('mins')) {
-        // Handle a time filter
-        final time = filter.split(' ').first;
-        queryString += '&maxReadyTime=$time';
-      } else {
-        // Handle a diet/cuisine filter
-        queryString += '&diet=$filter'; // or &cuisine=$filter
+      if (snapshot.docs.isEmpty) {
+        return [];
+      }
+
+      return snapshot.docs.map((doc) {
+        // Convert Firestore JSON back to Recipe objects
+        return Recipe.fromSpoonacularJson(doc.data());
+      }).toList();
+    } catch (e) {
+      // If something goes wrong (e.g. permissions), return empty list
+      throw Exception('Cache Fetch Error: $e');
+    }
+  }
+
+  /// Searches recipes from Spoonacular API with given query and filters.
+  Future<List<Recipe>> searchRecipes(String query, FilterState filters) async {
+    // Base parameters
+    final queryParams = {
+      'apiKey': _spoonacularApiKey,
+      'query': query,
+      'number': '20',
+      'instructionsRequired': 'true',
+      'addRecipeInformation': 'true', // Needed for time/rating
+    };
+
+    // 1. Handle Sort
+    if (filters.sortBy.isNotEmpty) {
+      switch (filters.sortBy) {
+        case 'Prep Time':
+          queryParams['sort'] = 'time';
+          queryParams['sortDirection'] = 'asc';
+          break;
+        case 'Ratings':
+          queryParams['sort'] =
+              'popularity'; // Spoonacular uses popularity/healthiness
+          break;
+        case 'Popularity':
+          queryParams['sort'] = 'popularity';
+          break;
+        // Add more cases as needed
       }
     }
-    final uri = Uri.parse(
-        'https://api.spoonacular.com/recipes/complexSearch?$queryString');
+
+    // 2. Handle Cuisines
+    if (filters.cuisines.isNotEmpty) {
+      queryParams['cuisine'] = filters.cuisines.join(',');
+    }
+
+    // 3. Handle Tags (Diet/Type)
+    if (filters.tags.isNotEmpty) {
+      queryParams['diet'] = filters.tags.join(',');
+    }
+
+    final uri = Uri.https(
+      'api.spoonacular.com',
+      '/recipes/complexSearch',
+      queryParams,
+    );
 
     final response = await _client.get(uri);
 
@@ -85,8 +133,6 @@ class RecipeService {
 }
 
 // --- PROVIDERS ---
-
-/// Simple provider for the service itself.
 final recipeServiceProvider = Provider<RecipeService>((ref) {
   return RecipeService();
 });
