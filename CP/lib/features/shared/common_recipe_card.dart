@@ -8,58 +8,85 @@ import 'package:flutter/material.dart';
 class CommonRecipeCard extends StatelessWidget {
   final Recipe recipe;
   final double imageHeight;
-  final bool useHeroAnimation;
 
   const CommonRecipeCard({
     super.key,
     required this.recipe,
-    this.imageHeight = 160, // Default height
-    this.useHeroAnimation = false,
+    this.imageHeight = 160,
   });
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final theme = Theme.of(context);
-
-    // Determine background color based on brightness
     final bgColor = theme.brightness == Brightness.light
         ? AppColors.background
         : AppColors.cardBackgroundDark;
+
+    // 🧠 SMART LOGIC:
+    // Check if this recipe has "Pantry Data" (from the scanner)
+    final bool isPantryMatch =
+        (recipe.usedIngredientCount > 0 || recipe.missedIngredientCount > 0);
 
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pushNamed('/recipe', arguments: recipe.id);
       },
       child: Container(
-        // Unified Card Decoration
         decoration: AppDecorations.elevatedCardStyle.copyWith(
           color: bgColor,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Image Section
+            // --- 1. Image Section ---
             ClipRRect(
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(AppBorders.radiusLg),
                 topRight: Radius.circular(AppBorders.radiusLg),
               ),
-              child: Image.network(
-                recipe.image,
-                height: imageHeight,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (ctx, err, st) => Container(
-                  height: imageHeight,
-                  width: double.infinity,
-                  color: AppColors.backgroundNeutral,
-                  child: const Icon(Icons.image_not_supported_outlined),
-                ),
+              child: Stack(
+                children: [
+                  Image.network(
+                    recipe.image,
+                    height: imageHeight,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (ctx, err, st) => Container(
+                      height: imageHeight,
+                      width: double.infinity,
+                      color: AppColors.backgroundNeutral,
+                      child: const Icon(Icons.image_not_supported_outlined),
+                    ),
+                  ),
+
+                  // 💡 FEATURE: "Missing Ingredients" Badge
+                  // Only shows if this is a pantry match and you are missing items
+                  if (isPantryMatch && recipe.missedIngredientCount > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent.withValues(alpha: .9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Missing: ${recipe.missedIngredientCount}',
+                          style: textTheme.labelSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
 
-            // 2. Content Section
+            // --- 2. Content Section ---
             Padding(
               padding: const EdgeInsets.all(AppSpacing.sm),
               child: Column(
@@ -74,26 +101,50 @@ class CommonRecipeCard extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xs),
 
-                  // Meta Row (Time, Rating)
+                  // Metadata Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Left side: Diet or Time
-                      Expanded(
-                        child: Text(
-                          '${recipe.subtitle1 ?? ''}\n${recipe.time ?? 'N/A'}',
-                          style: textTheme.bodyMedium?.copyWith(height: 1.3),
-                          maxLines: 2,
+                      // LEFT SIDE: Time or "You have X ingredients"
+                      if (isPantryMatch)
+                        // If pantry match, show "You have X"
+                        Expanded(
+                          child: Text(
+                            'You have ${recipe.usedIngredientCount} items',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color:
+                                  AppColors.primary, // Highlight in Green/Red
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        )
+                      else
+                        // Otherwise, show standard Time
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const Icon(Icons.access_time,
+                                  size: 14, color: AppColors.textLightGray),
+                              const SizedBox(width: 4),
+                              Text(
+                                recipe.time ?? 'N/A',
+                                style: textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      // Right side: Rating
+
+                      // RIGHT SIDE: Rating
                       Row(
                         children: [
                           const Icon(Icons.star,
-                              color: AppColors.rating, size: 18),
-                          const SizedBox(width: AppSpacing.xs),
+                              color: AppColors.rating, size: 16),
+                          const SizedBox(width: 4),
                           Text(
-                            recipe.rating?.toStringAsFixed(1) ?? 'N/A',
+                            recipe.rating != null && recipe.rating! > 0
+                                ? recipe.rating!.toStringAsFixed(1)
+                                : 'N/A',
                             style: textTheme.bodyMedium,
                           )
                         ],

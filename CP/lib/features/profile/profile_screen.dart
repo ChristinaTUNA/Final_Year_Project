@@ -10,6 +10,11 @@ import 'profile_viewmodel.dart';
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
+  void _onPushEditProfile(BuildContext context) {
+    // Navigate to the Edit Profile route we created
+    Navigator.of(context).pushNamed('/edit_profile');
+  }
+
   void _onPushPlaceholder(BuildContext context, String title) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -19,11 +24,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _onLogout(BuildContext context, WidgetRef ref) async {
-    // 1. Call the ViewModel to sign out
     await ref.read(profileViewModelProvider.notifier).signOut();
-
-    // 2. Navigate back to welcome AFTER sign-out is complete
-
     if (context.mounted) {
       Navigator.of(context).pushNamedAndRemoveUntil(
         '/login',
@@ -35,8 +36,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
-
-    final userAsync = ref.watch(profileViewModelProvider);
+    final userAsync = ref.watch(userProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -48,21 +48,21 @@ class ProfileScreen extends ConsumerWidget {
             children: [
               Text(
                 'Profile',
-                style: textTheme.displayLarge,
+                style: textTheme.displayMedium,
               ),
               const SizedBox(height: AppSpacing.md),
               userAsync.when(
                 data: (user) => ProfileHeader(
                   user: user,
-                  onEdit: () => _onPushPlaceholder(context, 'Edit Profile'),
+                  onEdit: () => _onPushEditProfile(context),
                 ),
                 loading: () => const SizedBox(
-                  height: 56,
+                  height: 80,
                   child: Center(child: CircularProgressIndicator()),
                 ),
                 error: (err, stack) => Text('Error: ${err.toString()}'),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.md),
               ProfileMenuList(
                 onPushPlaceholder: (title) =>
                     _onPushPlaceholder(context, title),

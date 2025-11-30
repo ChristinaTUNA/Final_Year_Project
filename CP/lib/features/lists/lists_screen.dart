@@ -67,6 +67,7 @@ class ListsScreen extends ConsumerWidget {
                   separatorBuilder: (_, __) =>
                       const SizedBox(height: AppSpacing.sm),
                   itemBuilder: (context, index) {
+                    // --- THE "ADD ITEM" ROW (Last Item) ---
                     if (index == list.length) {
                       return GestureDetector(
                         onTap: () => _showAddDialog(context, ref),
@@ -95,12 +96,57 @@ class ListsScreen extends ConsumerWidget {
                       );
                     }
 
+                    // --- THE LIST ITEM (Swipeable) ---
                     final item = list[index];
-                    return ListItemTile(
-                      item: item,
-                      onToggle: () => ref
-                          .read(listsViewModelProvider.notifier)
-                          .toggleDone(index),
+
+                    // ⬇️ Wrap in Dismissible to enable Swipe-to-Delete
+                    return Dismissible(
+                      // Use a unique key for proper deletion animation
+                      key: Key('${item.id}_$index'),
+                      direction:
+                          DismissDirection.endToStart, // Swipe Right to Left
+
+                      // Background shown behind the item when swiping
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.delete_outline,
+                            color: Colors.white),
+                      ),
+
+                      onDismissed: (direction) {
+                        // 1. Delete from ViewModel (and Firebase)
+                        ref
+                            .read(listsViewModelProvider.notifier)
+                            .deleteItem(index);
+
+                        // 2. Optional: Show Undo Snackbar
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${item.name} removed'),
+                            action: SnackBarAction(
+                              label: 'Undo',
+                              onPressed: () {
+                                // Add it back if user clicks Undo
+                                ref
+                                    .read(listsViewModelProvider.notifier)
+                                    .addItem(item);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+
+                      child: ListItemTile(
+                        item: item,
+                        onToggle: () => ref
+                            .read(listsViewModelProvider.notifier)
+                            .toggleDone(index),
+                      ),
                     );
                   },
                 ),

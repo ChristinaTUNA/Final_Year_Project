@@ -1,4 +1,6 @@
 import 'package:cookit/data/models/filter_state.dart';
+import 'package:cookit/data/services/recommendation_service.dart';
+import 'package:cookit/data/services/user_database_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cookit/data/models/recipe_model.dart';
 import 'package:cookit/data/services/recipe_service.dart';
@@ -25,11 +27,33 @@ class ExploreViewModel extends AsyncNotifier<List<Recipe>> {
     final filters = ref.watch(exploreFilterStateProvider);
     final recipeService = ref.watch(recipeServiceProvider);
 
+    final dbService = ref.watch(userDatabaseServiceProvider);
+    final recommendationEngine = ref.watch(recommendationServiceProvider);
+
+    // 1. Fetch Raw Recipes (From Cache or API)
+    List<Recipe> rawResults;
     if (query.isEmpty && filters.isEmpty) {
-      return recipeService.getCachedRecipes(); // Return cached recipes
+      rawResults = await recipeService.getCachedRecipes();
+    } else {
+      rawResults = await recipeService.searchRecipes(query, filters);
     }
 
-    // ⬇️ Pass the complex filter state to the service
-    return recipeService.searchRecipes(query, filters);
+    // 2. Apply "Smart Rank" if selected (or if default)
+    if (filters.sortBy.isEmpty || filters.sortBy == 'Smart Rank') {
+      // Fetch context
+      final pantryList = await dbService.getListStream('pantry').first;
+      final prefs = await dbService.getPreferences();
+
+      // Run the Engine
+      return recommendationEngine.rankRecipes(
+        recipes: rawResults,
+        pantryItems: pantryList,
+        prefs: prefs,
+        mode: 'explore',
+      );
+    }
+
+    // If sorting by something else (e.g. 'Prep Time'), just return raw results
+    return rawResults;
   }
 }

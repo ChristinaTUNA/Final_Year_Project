@@ -1,3 +1,4 @@
+// android/build.gradle.kts
 buildscript {
      val kotlinVersion = "2.0.21"
 

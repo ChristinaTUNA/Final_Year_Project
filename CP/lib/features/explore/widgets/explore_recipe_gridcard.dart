@@ -12,7 +12,7 @@ class ExploreRecipeGridCard extends StatelessWidget {
     // so we just pass the recipe and internal image preference.
     return CommonRecipeCard(
       recipe: recipe,
-      imageHeight: 140, // Smaller image for grid
+      imageHeight: 170, // Smaller image for grid
     );
   }
 }

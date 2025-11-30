@@ -83,6 +83,8 @@ class Recipe {
   final double? healthScore;
   final List<InstructionSection> instructions;
   final List<IngredientItem> ingredients;
+  final int usedIngredientCount;
+  final int missedIngredientCount;
 
   Recipe({
     required this.id,
@@ -95,23 +97,9 @@ class Recipe {
     this.healthScore,
     this.ingredients = const [],
     this.instructions = const [],
+    this.usedIngredientCount = 0,
+    this.missedIngredientCount = 0,
   });
-
-  /// Factory constructor to parse static explore_recipes.json
-  factory Recipe.fromStaticJson(Map<String, dynamic> json) {
-    return Recipe(
-      id: json['id'],
-      title: json['title'],
-      image: json['image'],
-      rating: (json['rating'] as num?)?.toDouble(),
-      time: json['time'],
-      subtitle1: json['subtitle1'],
-      subtitle2: json['subtitle2'],
-      healthScore: (json['healthScore'] as num?)?.toDouble(),
-      ingredients: [], // Static JSON doesn't have ingredients
-      instructions: [], // Static JSON doesn't have instructions
-    );
-  }
 
   /// Factory constructor to parse Spoonacular API response
   factory Recipe.fromSpoonacularJson(Map<String, dynamic> json) {

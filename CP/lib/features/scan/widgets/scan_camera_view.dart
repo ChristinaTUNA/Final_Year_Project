@@ -70,7 +70,11 @@ class _ScanCameraViewState extends State<ScanCameraView>
     }
 
     if (state == AppLifecycleState.inactive) {
-      cameraController.dispose();
+      // When the app is inactive, dispose of the controller and set it to null.
+      cameraController.dispose().then((_) {
+        if (!mounted) return;
+        setState(() => _isCameraInitialized = false);
+      });
     } else if (state == AppLifecycleState.resumed) {
       _initCamera();
     }

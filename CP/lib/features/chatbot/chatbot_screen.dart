@@ -42,7 +42,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
 
     _pulseAnimation = Tween(begin: 0.95, end: 1.05).animate(
         CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
-  }
+  } //TODO: make it work
 
   @override
   void dispose() {

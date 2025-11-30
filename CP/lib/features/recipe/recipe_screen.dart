@@ -1,3 +1,4 @@
+// lib/features/recipe/recipe_screen.dart
 import 'package:cookit/core/theme/app_borders.dart';
 import 'package:cookit/core/theme/app_colors.dart';
 import 'package:cookit/core/theme/app_spacing.dart';
@@ -20,7 +21,6 @@ class RecipeScreen extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final theme = Theme.of(context);
 
-    // ⬇️ CLEANER: UI only handles UI things (SnackBar)
     Future<void> onAddToShopping() async {
       // Call the ViewModel method
       final count = await ref
@@ -100,7 +100,6 @@ class RecipeScreen extends ConsumerWidget {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          // ⬇️ Updated callback
                           onPressed: state.anyIngredientSelected
                               ? onAddToShopping
                               : null,
@@ -206,7 +205,7 @@ class RecipeScreen extends ConsumerWidget {
               ],
             ),
           );
-        }, //TODO CHANGED THIS PAGE LATER CHECK IN APP
+        },
       ),
     );
   }

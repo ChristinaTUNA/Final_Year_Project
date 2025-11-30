@@ -24,7 +24,7 @@ class ExploreScreen extends ConsumerWidget {
             children: [
               Text(
                 'Explore Recipes',
-                style: textTheme.displayLarge,
+                style: textTheme.displayMedium,
               ),
               const SizedBox(height: AppSpacing.md),
               const ExploreSearchBar(),

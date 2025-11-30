@@ -1,7 +1,10 @@
+import 'package:cookit/data/models/filter_state.dart';
+import 'package:cookit/data/models/recipe_model.dart';
+import 'package:cookit/data/services/recipe_service.dart';
+import 'package:cookit/data/services/recommendation_service.dart';
+import 'package:cookit/data/services/user_database_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
-import '../../../data/models/recipe_model.dart';
-import '../../../data/services/recipe_service.dart';
 
 // --- STATE ---
 class HomeState extends Equatable {
@@ -27,7 +30,6 @@ class HomeState extends Equatable {
   List<Object?> get props => [quickMeals, cookNowMeals];
 }
 
-// --- VIEWMODEL ---
 class HomeViewModel extends AsyncNotifier<HomeState> {
   @override
   Future<HomeState> build() async {
@@ -35,36 +37,64 @@ class HomeViewModel extends AsyncNotifier<HomeState> {
   }
 
   Future<HomeState> _loadHomeData() async {
+    // 1. Get all the tools we need
     final recipeService = ref.watch(recipeServiceProvider);
+    final dbService = ref.watch(userDatabaseServiceProvider);
+    final recommendationEngine = ref.watch(recommendationServiceProvider);
 
-    // 1. Try to load from Firebase Cache first (0 Points)
-    List<Recipe> allRecipes = await recipeService.getCachedRecipes();
+    // 2. Fetch Raw Data (Recipes + User Context)
+    // Fetch cached recipes (0 points)
+    final rawRecipes = await recipeService.getCachedRecipes();
 
-    // 2. Filter the list (whether from Cache or API) into sections
-    // "Quick" = ready in 20 mins or less
-    final quickMeals = allRecipes.where((r) {
-      if (r.time == null) return false;
-      // Parse "15 mins" or "45" to int
-      final timeString = r.time!.replaceAll(RegExp(r'[^0-9]'), '');
-      final minutes = int.tryParse(timeString) ?? 999;
-      return minutes <= 20;
-    }).toList();
+    // Fetch user context (Pantry + Prefs)
+    // We take the first item from the stream to get a snapshot
+    final pantryList = await dbService.getListStream('pantry').first;
+    final prefs = await dbService.getPreferences();
 
-    // TODO"Cook Now" = match things contains in the pantry list of user
-    // TODO: also match user preference for suggesting recipe
-
-    final cookNowMeals =
-        allRecipes.where((r) => !quickMeals.contains(r)).toList();
-
-    // TODO Fallback if there are no ingredient in their pantry but suggest quick and related to their preference
-
-    if (cookNowMeals.isEmpty && quickMeals.isNotEmpty) {
-      // cookNowMeals.addAll(quickMeals); // Optional: duplicate if needed
+    // 3. Fallback: Seed data from API if cache is totally empty
+    List<Recipe> allRecipes = rawRecipes;
+    if (allRecipes.isEmpty) {
+      try {
+        final apiResults = await Future.wait([
+          recipeService.searchRecipes('quick', const FilterState()),
+          recipeService.searchRecipes('dinner', const FilterState()),
+        ]);
+        allRecipes = [...apiResults[0], ...apiResults[1]];
+      } catch (e) {
+        return const HomeState();
+      }
     }
+
+    // 4. THE MAGIC: Use the Universal Engine 🪄
+
+    // Logic for Quick Meals (Filter: Time < 20, Sort: Score)
+    final quickMeals = recommendationEngine.rankRecipes(
+      recipes: allRecipes,
+      pantryItems: pantryList,
+      prefs: prefs,
+      mode: 'quick',
+    );
+
+    // Logic for Cook Now (Filter: High Pantry Match, Sort: Score)
+    final cookNowMeals = recommendationEngine.rankRecipes(
+      recipes: allRecipes,
+      pantryItems: pantryList,
+      prefs: prefs,
+      mode: 'cook_now',
+    );
+
+    // Safety: If "Cook Now" is empty (user has no ingredients), fallback to "Explore" mode
+    final finalCookNow = cookNowMeals.isNotEmpty
+        ? cookNowMeals
+        : recommendationEngine.rankRecipes(
+            recipes: allRecipes,
+            pantryItems: [],
+            prefs: prefs,
+            mode: 'explore');
 
     return HomeState(
       quickMeals: quickMeals,
-      cookNowMeals: cookNowMeals,
+      cookNowMeals: finalCookNow,
     );
   }
 }

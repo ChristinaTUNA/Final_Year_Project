@@ -26,27 +26,21 @@ class ProfileMenuList extends StatelessWidget {
           ProfileTile(
             icon: Icons.calendar_today_outlined,
             label: 'My Preferences',
-            onTap: () => onPushPlaceholder('My Preferences'),
+            onTap: () => Navigator.of(context).pushNamed('/edit_preferences'),
           ),
-          const Divider(height: 1, color: AppColors.divider),
+          const Divider(height: 10, color: AppColors.divider),
           ProfileTile(
-            icon: Icons.credit_card_outlined,
-            label: 'My Activity',
-            onTap: () => onPushPlaceholder('My Activity'),
-          ),
-          const Divider(height: 1, color: AppColors.divider),
-          ProfileTile(
-            icon: Icons.notifications_none,
-            label: 'Notifications',
-            onTap: () => onPushPlaceholder('Notifications'),
-          ),
-          const Divider(height: 1, color: AppColors.divider),
+            icon: Icons.bookmark_outline,
+            label: 'My Favourites',
+            onTap: () => onPushPlaceholder('My Favourites'),
+          ), //TODO: add bookmark to my favourite
+          const Divider(height: 10, color: AppColors.divider),
           ProfileTile(
             icon: Icons.help_outline,
             label: 'Help',
             onTap: () => onPushPlaceholder('Help'),
           ),
-          const Divider(height: 1, color: AppColors.divider),
+          const Divider(height: 10, color: AppColors.divider),
           ProfileTile(
             icon: Icons.info_outline,
             label: 'About',

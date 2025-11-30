@@ -80,7 +80,7 @@ class AppTextStyles {
   /// 12px, w400 (Was 'caption')
   static TextStyle get bodySmall => GoogleFonts.poppins(
         fontSize: 12,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w600,
       );
 
   // --- 5. LABEL ---

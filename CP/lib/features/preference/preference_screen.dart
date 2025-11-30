@@ -20,16 +20,14 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
   @override
   void initState() {
     super.initState();
-
-    final initialPage = ref.read(preferenceProvider).currentPage;
+    final initialPage = ref.read(preferenceViewModelProvider).currentPage;
     _pageController = PageController(initialPage: initialPage);
 
-    // Sync PageView with ViewModel
+    // Sync PageView changes back to ViewModel state
     _pageController.addListener(() {
       final page = _pageController.page?.round() ?? 0;
-
-      if (page != ref.read(preferenceProvider).currentPage) {
-        ref.read(preferenceProvider.notifier).setPage(page);
+      if (page != ref.read(preferenceViewModelProvider).currentPage) {
+        ref.read(preferenceViewModelProvider.notifier).setPage(page);
       }
     });
   }
@@ -42,14 +40,14 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(preferenceProvider);
-    final viewModel = ref.read(preferenceProvider.notifier);
+    final state = ref.watch(preferenceViewModelProvider);
+    final viewModel = ref.read(preferenceViewModelProvider.notifier);
     final textTheme = Theme.of(context).textTheme;
 
     const dietaryOptions = [
-      'Dairy-Free',
+      'Dairy Free',
       'Keto',
-      'Gluten-Free',
+      'Gluten Free',
       'Low Carbs',
       'Vegetarian',
       'Paleo',
@@ -76,52 +74,63 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: textTheme.bodyLarge?.color),
-          onPressed: () => viewModel.back(context, _pageController),
+          // Disable back button while loading
+          onPressed: state.isLoading
+              ? null
+              : () => viewModel.back(context, _pageController),
         ),
         actions: [
           TextButton(
-            onPressed: () => viewModel.skip(context),
+            // Disable skip button while loading
+            onPressed: state.isLoading ? null : () => viewModel.skip(context),
             child: Text(
               'Skip',
-              style:
-                  AppTextStyles.labelLarge.copyWith(color: AppColors.primary),
+              style: AppTextStyles.labelLarge.copyWith(
+                color: state.isLoading ? Colors.grey : AppColors.primary,
+              ),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
         ],
       ),
       body: Padding(
-        padding: AppSpacing.pHorizontalLg, // 24px
+        padding: AppSpacing.pHorizontalLg,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             PreferenceProgressbar(currentPage: state.currentPage),
-            const SizedBox(height: AppSpacing.xl), // 32px
+            const SizedBox(height: AppSpacing.xl),
+
+            // Page View
             Expanded(
               child: PageView(
                 controller: _pageController,
+                physics: state.isLoading
+                    ? const NeverScrollableScrollPhysics()
+                    : null, // Freeze scrolling while saving
                 children: [
                   _buildPage(
                     title: 'Tell us your dietary restrictions or preferences',
                     options: dietaryOptions,
                     isMultiSelect: true,
                     selected: state.dietaryPrefs,
+                    isLoading: state.isLoading,
                     onTap: (pref) => viewModel.toggleDietaryPref(pref),
                   ),
-                  // --- Page 2: Time ---
                   _buildPage(
                     title: 'How much time do you prefer spending?',
                     options: timeOptions,
                     isMultiSelect: false,
                     selected: state.timePref,
+                    isLoading: state.isLoading,
                     onTap: (pref) => viewModel.setTimePref(pref),
                   ),
-                  // --- Page 3: Servings ---
                   _buildPage(
                     title: 'How many people do you usually cook for?',
                     options: servingsOptions,
                     isMultiSelect: true,
                     selected: state.servingsPref,
+                    isLoading: state.isLoading,
                     onTap: (pref) => viewModel.toggleServingsPref(pref),
                   ),
                 ],
@@ -130,13 +139,27 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
           ],
         ),
       ),
+
+      // Bottom Navigation (Next Button)
       bottomNavigationBar: Padding(
         padding: AppSpacing.pAllXl.copyWith(top: AppSpacing.md),
         child: SizedBox(
           height: 56,
           child: ElevatedButton(
-            onPressed: () => viewModel.next(context, _pageController),
-            child: const Text('Next'),
+            // ⬇️ Disable or Show Loading Logic
+            onPressed: state.isLoading
+                ? null
+                : () => viewModel.next(context, _pageController),
+            child: state.isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: AppColors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text('Next'),
           ),
         ),
       ),
@@ -148,6 +171,7 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     required List<String> options,
     required dynamic selected,
     required bool isMultiSelect,
+    required bool isLoading,
     required ValueChanged<String> onTap,
   }) {
     return Column(
@@ -157,10 +181,10 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
           title,
           style: Theme.of(context).textTheme.displayLarge,
         ),
-        const SizedBox(height: AppSpacing.lg), // 24px
+        const SizedBox(height: AppSpacing.lg),
         Wrap(
-          spacing: AppSpacing.sm, // 12px
-          runSpacing: AppSpacing.sm, // 12px
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
           children: options.map((option) {
             bool isSelected;
             if (isMultiSelect) {
@@ -168,10 +192,12 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
             } else {
               isSelected = (selected as String?) == option;
             }
+
             return PreferenceChip(
               label: option,
               isSelected: isSelected,
-              onTap: () => onTap(option),
+              // Disable interaction if loading
+              onTap: isLoading ? () {} : () => onTap(option),
             );
           }).toList(),
         ),

@@ -5,31 +5,31 @@ import 'package:image_picker/image_picker.dart';
 import '../models/scanned_ingredient.dart';
 
 const String _openRouterApiKey =
-    "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";
+    "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";
 
-/// This service manages all interactions with the
-/// Gemini (via OpenRouter) multimodal API.
-class GeminiService {
+class ImageRecognitionService {
   final http.Client _client = http.Client();
 
   final String _systemPrompt = """
 Analyze this image of a kitchen counter, pantry, or fridge.
 Identify ONLY the food ingredients.
-Return your answer as a valid JSON array of objects, where each object has a "name" and "category".
+Return your answer as a valid JSON array of objects, where each object has a simplified format of "name" (single word/phrase) ,"quantity", and "category".
 Example: [{"name": "red onion", "quantity": "1", "category": "Vegetable"}, {"name": "chicken breast", quantity": "2", "category": "Poultry"}]
 If you see no ingredients, return an empty array [].
 """;
 
   /// Takes an image file, converts it to base64, and sends it to
   /// the OpenRouter Gemini API for analysis.
+  String _normalizeIngredient(String rawName) {
+    return rawName.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').trim();
+  }
+
   Future<List<ScannedIngredient>> analyzeImage(XFile imageFile) async {
-    // 1. Convert the image to a base64 string
     final imageBytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(imageBytes);
     final mimeType = imageFile.mimeType ?? 'image/jpeg';
     final imageUrl = 'data:$mimeType;base64,$base64Image';
 
-    // 2. Build the OpenRouter API request
     final uri = Uri.parse('https://openrouter.ai/api/v1/chat/completions');
 
     final headers = {
@@ -38,7 +38,7 @@ If you see no ingredients, return an empty array [].
     };
 
     final body = json.encode({
-      "model": "google/gemini-2.0-flash-exp:free",
+      "model": "x-ai/grok-4.1-fast:free",
       "messages": [
         {
           "role": "user",
@@ -56,26 +56,31 @@ If you see no ingredients, return an empty array [].
       ]
     });
 
-    // 3. Send the request
     try {
       final response = await _client.post(uri, headers: headers, body: body);
 
       if (response.statusCode == 200) {
-        // 4. Parse the *outer* JSON response
         final data = json.decode(response.body) as Map<String, dynamic>;
         final content = data['choices'][0]['message']['content'] as String;
 
-        // 5. Parse the *inner* JSON (the actual ingredient list)
-        final List<dynamic> ingredientListJson = json.decode(content);
+        // Clean up markdown code blocks if Gemini sends them
+        final cleanContent =
+            content.replaceAll('```json', '').replaceAll('```', '');
 
-        return ingredientListJson
-            .map((json) =>
-                ScannedIngredient.fromJson(json as Map<String, dynamic>))
-            .toList();
+        final List<dynamic> ingredientListJson = json.decode(cleanContent);
+
+        return ingredientListJson.map((json) {
+          final rawName = json['name'] as String? ?? 'Unknown';
+          final cleanName = _normalizeIngredient(rawName);
+
+          return ScannedIngredient(
+            name: cleanName,
+            category: json['category'] as String? ?? 'Uncategorized',
+            quantity: json['quantity'] as String? ?? '1',
+          );
+        }).toList();
       } else {
-        // Handle API errors (quota, etc.)
-        throw Exception(
-            'Failed to analyze image. Status code: ${response.statusCode}, Body: ${response.body}');
+        throw Exception('Failed to analyze image: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Error sending request to OpenRouter: $e');
@@ -84,6 +89,7 @@ If you see no ingredients, return an empty array [].
 }
 
 // --- PROVIDER ---
-final geminiServiceProvider = Provider<GeminiService>((ref) {
-  return GeminiService();
+final imageRecognitionServiceProvider =
+    Provider<ImageRecognitionService>((ref) {
+  return ImageRecognitionService();
 });

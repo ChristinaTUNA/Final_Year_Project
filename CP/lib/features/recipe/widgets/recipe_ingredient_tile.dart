@@ -31,14 +31,27 @@ class RecipeIngredientTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${ingredient.amount}  ${ingredient.name}',
-                  style: textTheme.titleSmall, // (14px, w600)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        ingredient.name,
+                        style: textTheme.titleSmall,
+                      ),
+                    ),
+                    Text(
+                      ingredient.amount,
+                      style: textTheme.titleSmall?.copyWith(
+                        color: AppColors.secondary,
+                      ),
+                    ),
+                  ],
                 ),
                 Text(
                   ingredient.note,
-                  style:
-                      textTheme.bodySmall?.copyWith(color: AppColors.textGray),
+                  style: textTheme.bodySmall?.copyWith(
+                    color: AppColors.textLightGray,
+                  ),
                 ),
               ],
             ),

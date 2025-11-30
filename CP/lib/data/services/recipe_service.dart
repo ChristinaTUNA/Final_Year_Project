@@ -1,10 +1,9 @@
-// lib/data/services/recipe_service.dart
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
+import '../models/recipe_model.dart';
 import 'package:cookit/data/models/filter_state.dart';
-import 'package:cookit/data/models/recipe_model.dart';
 
 const String _spoonacularApiKey = "35d09c6f61894bbfa03304a51c8b6269";
 
@@ -12,7 +11,19 @@ class RecipeService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final http.Client _client = http.Client();
 
-// Fetches cached recipes from Firebase Firestore.
+  // Helper to log API usage to the debug console
+  void _logQuota(http.Response response) {
+    final used = response.headers['x-api-quota-used'];
+    final left = response.headers['x-api-quota-left'];
+    final requestCost = response.headers['x-api-quota-request'];
+
+    if (used != null && left != null) {
+      throw Exception(
+          '\nSPOONACULAR QUOTA:\n   Used today: $used\n   Remaining:  $left\n   Cost of this call: $requestCost points');
+    }
+  }
+
+  /// Fetches cached recipes from Firebase Firestore.
   Future<List<Recipe>> getCachedRecipes() async {
     try {
       final snapshot = await _firestore
@@ -37,58 +48,54 @@ class RecipeService {
   /// Searches recipes from Spoonacular API with given query and filters.
   Future<List<Recipe>> searchRecipes(String query, FilterState filters) async {
     // Base parameters
-    final queryParams = {
-      'apiKey': _spoonacularApiKey,
-      'query': query,
-      'number': '20',
-      'instructionsRequired': 'true',
-      'addRecipeInformation': 'true', // Needed for time/rating
-    };
+    var queryString =
+        'apiKey=$_spoonacularApiKey&query=$query&number=20&instructionsRequired=true&addRecipeInformation=true';
 
     // 1. Handle Sort
     if (filters.sortBy.isNotEmpty) {
       switch (filters.sortBy) {
         case 'Prep Time':
-          queryParams['sort'] = 'time';
-          queryParams['sortDirection'] = 'asc';
+          queryString += '&sort=time&sortDirection=asc';
           break;
         case 'Ratings':
-          queryParams['sort'] =
-              'popularity'; // Spoonacular uses popularity/healthiness
+          queryString +=
+              '&sort=popularity'; // Spoonacular uses popularity/healthiness
           break;
         case 'Popularity':
-          queryParams['sort'] = 'popularity';
+          queryString += '&sort=popularity';
           break;
-        // Add more cases as needed
       }
     }
 
     // 2. Handle Cuisines
     if (filters.cuisines.isNotEmpty) {
-      queryParams['cuisine'] = filters.cuisines.join(',');
+      queryString += '&cuisine=${filters.cuisines.join(',')}';
     }
 
     // 3. Handle Tags (Diet/Type)
     if (filters.tags.isNotEmpty) {
-      queryParams['diet'] = filters.tags.join(',');
+      queryString += '&diet=${filters.tags.join(',')}';
     }
 
-    final uri = Uri.https(
-      'api.spoonacular.com',
-      '/recipes/complexSearch',
-      queryParams,
-    );
+    final uri = Uri.parse(
+        'https://api.spoonacular.com/recipes/complexSearch?$queryString');
 
     final response = await _client.get(uri);
+
+    //  LOG THE QUOTA
+    _logQuota(response);
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body) as Map<String, dynamic>;
       final results = data['results'] as List<dynamic>;
-      // Use the 'fromSpoonacularSearchJson' factory
-      return results
+
+      // Assign to a variable 'recipes' instead of returning immediately
+      List<Recipe> recipes = results
           .map((json) =>
               Recipe.fromSpoonacularSearchJson(json as Map<String, dynamic>))
           .toList();
+
+      return recipes;
     } else {
       throw Exception('Failed to search recipes: ${response.statusCode}');
     }
@@ -120,6 +127,7 @@ class RecipeService {
         'https://api.spoonacular.com/recipes/$recipeId/information?apiKey=$_spoonacularApiKey&includeNutrition=false');
 
     final response = await _client.get(uri);
+    _logQuota(response);
 
     if (response.statusCode == 200) {
       return json.decode(response.body) as Map<String, dynamic>;

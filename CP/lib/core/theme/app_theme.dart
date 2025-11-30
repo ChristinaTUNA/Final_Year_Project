@@ -64,9 +64,9 @@ class AppTheme {
       bodyLarge:
           AppTextStyles.bodyLarge.copyWith(color: AppColors.textDark), // 16px
       bodyMedium:
-          AppTextStyles.bodyMedium.copyWith(color: AppColors.textGray), // 14px
-      bodySmall: AppTextStyles.bodySmall
-          .copyWith(color: AppColors.textLightGray), // 12px
+          AppTextStyles.bodyMedium.copyWith(color: AppColors.textDark), // 14px
+      bodySmall:
+          AppTextStyles.bodySmall.copyWith(color: AppColors.textDark), // 12px
 
       // 5. LABEL (Buttons, Chips)
       labelLarge:
