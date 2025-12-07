@@ -6,76 +6,91 @@ import 'package:cookit/data/services/user_database_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
 
+// --- HELPER PROVIDERS FOR STREAMS ---
+// These allow us to 'watch' the database updates cleanly
+final pantryStreamProvider = StreamProvider.autoDispose((ref) {
+  final db = ref.watch(userDatabaseServiceProvider);
+  return db.getListStream('pantry');
+});
+
+final preferencesStreamProvider = StreamProvider.autoDispose((ref) {
+  final db = ref.watch(userDatabaseServiceProvider);
+  return db.getPreferencesStream();
+});
+
 // --- STATE ---
 class HomeState extends Equatable {
-  final List<Recipe> quickMeals;
+  final List<Recipe> recentMeals;
   final List<Recipe> cookNowMeals;
+  final List<Recipe> recommendedMeals;
+  final String recommendationTitle;
 
   const HomeState({
-    this.quickMeals = const [],
+    this.recentMeals = const [],
     this.cookNowMeals = const [],
+    this.recommendedMeals = const [],
+    this.recommendationTitle = 'Recommended for You',
   });
 
   HomeState copyWith({
-    List<Recipe>? quickMeals,
+    List<Recipe>? recentMeals,
     List<Recipe>? cookNowMeals,
+    List<Recipe>? recommendedMeals,
+    String? recommendationTitle,
   }) {
     return HomeState(
-      quickMeals: quickMeals ?? this.quickMeals,
+      recentMeals: recentMeals ?? this.recentMeals,
       cookNowMeals: cookNowMeals ?? this.cookNowMeals,
+      recommendedMeals: recommendedMeals ?? this.recommendedMeals,
+      recommendationTitle: recommendationTitle ?? this.recommendationTitle,
     );
   }
 
   @override
-  List<Object?> get props => [quickMeals, cookNowMeals];
+  List<Object?> get props =>
+      [recentMeals, cookNowMeals, recommendedMeals, recommendationTitle];
 }
 
 class HomeViewModel extends AsyncNotifier<HomeState> {
   @override
   Future<HomeState> build() async {
-    return _loadHomeData();
-  }
+    // Get latest pantry & preferences from streams
+    final pantryList = await ref.watch(pantryStreamProvider.future);
+    final prefs = await ref.watch(preferencesStreamProvider.future);
 
-  Future<HomeState> _loadHomeData() async {
-    // 1. Get all the tools we need
+    // Get Services
     final recipeService = ref.watch(recipeServiceProvider);
     final dbService = ref.watch(userDatabaseServiceProvider);
     final recommendationEngine = ref.watch(recommendationServiceProvider);
 
-    // 2. Fetch Raw Data (Recipes + User Context)
-    // Fetch cached recipes (0 points)
-    final rawRecipes = await recipeService.getCachedRecipes();
+    // 1. Fetch Static Data (History & Cache)
+    final historyList = await dbService.getHistory();
+    final cachedRecipes = await recipeService.getCachedRecipes();
 
-    // Fetch user context (Pantry + Prefs)
-    // We take the first item from the stream to get a snapshot
-    final pantryList = await dbService.getListStream('pantry').first;
-    final prefs = await dbService.getPreferences();
-
-    // 3. Fallback: Seed data from API if cache is totally empty
-    List<Recipe> allRecipes = rawRecipes;
+    // 2. Fallback Seed Data
+    List<Recipe> allRecipes = cachedRecipes;
     if (allRecipes.isEmpty) {
       try {
         final apiResults = await Future.wait([
-          recipeService.searchRecipes('quick', const FilterState()),
           recipeService.searchRecipes('dinner', const FilterState()),
         ]);
-        allRecipes = [...apiResults[0], ...apiResults[1]];
+        allRecipes = [...apiResults[0]];
       } catch (e) {
-        return const HomeState();
+        // Keep empty
       }
     }
 
-    // 4. THE MAGIC: Use the Universal Engine 🪄
+    // 3. RE-CALCULATE LOGIC (Runs every time pantry/prefs update)
 
-    // Logic for Quick Meals (Filter: Time < 20, Sort: Score)
-    final quickMeals = recommendationEngine.rankRecipes(
-      recipes: allRecipes,
+    // A. Recent Meals (Uses History)
+    final recentMeals = recommendationEngine.rankRecipes(
+      recipes: historyList,
       pantryItems: pantryList,
       prefs: prefs,
-      mode: 'quick',
+      mode: 'recent',
     );
 
-    // Logic for Cook Now (Filter: High Pantry Match, Sort: Score)
+    // B. Cook Now (Pantry Match)
     final cookNowMeals = recommendationEngine.rankRecipes(
       recipes: allRecipes,
       pantryItems: pantryList,
@@ -83,7 +98,6 @@ class HomeViewModel extends AsyncNotifier<HomeState> {
       mode: 'cook_now',
     );
 
-    // Safety: If "Cook Now" is empty (user has no ingredients), fallback to "Explore" mode
     final finalCookNow = cookNowMeals.isNotEmpty
         ? cookNowMeals
         : recommendationEngine.rankRecipes(
@@ -92,14 +106,49 @@ class HomeViewModel extends AsyncNotifier<HomeState> {
             prefs: prefs,
             mode: 'explore');
 
+    // C. Personalized Recommendations (Diet Match)
+    List<Recipe> recommendedMeals = [];
+    String recTitle = 'Top Picks for You';
+
+    if (prefs.diets.isNotEmpty) {
+      final mainDiet = prefs.diets.first;
+      recTitle = 'Because you like $mainDiet';
+
+      recommendedMeals =
+          recommendationEngine.getDietaryMatches(allRecipes, mainDiet);
+
+      if (recommendedMeals.length < 4) {
+        try {
+          final newRecs = await recipeService.searchRecipes(
+            '',
+            FilterState(tags: {mainDiet}),
+          );
+          recommendedMeals = newRecs;
+          // Note: We don't add to allRecipes here to avoid infinite loops/complexity in this build
+        } catch (e) {
+          // Ignore API errors
+        }
+      }
+    }
+
+    if (recommendedMeals.isEmpty) {
+      recTitle = 'Recommended for You';
+      recommendedMeals = recommendationEngine.rankRecipes(
+          recipes: allRecipes,
+          pantryItems: pantryList,
+          prefs: prefs,
+          mode: 'explore');
+    }
+
     return HomeState(
-      quickMeals: quickMeals,
+      recentMeals: recentMeals,
       cookNowMeals: finalCookNow,
+      recommendedMeals: recommendedMeals,
+      recommendationTitle: recTitle,
     );
   }
 }
 
-// --- PROVIDER ---
 final homeViewModelProvider = AsyncNotifierProvider<HomeViewModel, HomeState>(
   () => HomeViewModel(),
 );

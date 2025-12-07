@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cookit/data/models/recipe_model.dart';
-import 'package:cookit/features/shared/common_recipe_card.dart'; // Import Shared
+import 'package:cookit/features/shared/common_recipe_card.dart';
 
 class ExploreRecipeGridCard extends StatelessWidget {
   final Recipe recipe;
@@ -8,11 +8,9 @@ class ExploreRecipeGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The GridView parent controls the width/height,
-    // so we just pass the recipe and internal image preference.
     return CommonRecipeCard(
       recipe: recipe,
-      imageHeight: 170, // Smaller image for grid
+      imageHeight: 150, // Smaller image for grid
     );
   }
 }

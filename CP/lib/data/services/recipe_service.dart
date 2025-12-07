@@ -11,68 +11,119 @@ class RecipeService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final http.Client _client = http.Client();
 
-  // Helper to log API usage to the debug console
-  void _logQuota(http.Response response) {
-    final used = response.headers['x-api-quota-used'];
-    final left = response.headers['x-api-quota-left'];
-    final requestCost = response.headers['x-api-quota-request'];
+  // ===========================================================================
+  // PUBLIC METHODS (Called by ViewModels)
+  // ===========================================================================
 
-    if (used != null && left != null) {
-      throw Exception(
-          '\nSPOONACULAR QUOTA:\n   Used today: $used\n   Remaining:  $left\n   Cost of this call: $requestCost points');
-    }
-  }
-
-  /// Fetches cached recipes from Firebase Firestore.
+  /// Fetches recently cached recipes from Firestore (Fast & Free).
   Future<List<Recipe>> getCachedRecipes() async {
     try {
-      final snapshot = await _firestore
-          .collection('recipes')
-          .limit(30) // Limit to 30 to be fast
-          .get();
+      final snapshot = await _firestore.collection('recipes').limit(30).get();
 
-      if (snapshot.docs.isEmpty) {
-        return [];
-      }
+      if (snapshot.docs.isEmpty) return [];
 
       return snapshot.docs.map((doc) {
-        // Convert Firestore JSON back to Recipe objects
         return Recipe.fromSpoonacularJson(doc.data());
       }).toList();
     } catch (e) {
-      // If something goes wrong (e.g. permissions), return empty list
-      throw Exception('Cache Fetch Error: $e');
+      // Return empty list on error so app doesn't crash
+      return [];
     }
   }
 
-  /// Searches recipes from Spoonacular API with given query and filters.
+  /// Searches recipes using a Hybrid Strategy.
+  /// 1. Comma in query? -> Ingredient Search (Cheap)
+  /// 2. Text in query? -> Complex Search (Standard)
   Future<List<Recipe>> searchRecipes(String query, FilterState filters) async {
-    // Base parameters
-    var queryString =
-        'apiKey=$_spoonacularApiKey&query=$query&number=20&instructionsRequired=true&addRecipeInformation=true';
+    if (query.contains(',')) {
+      return _searchByIngredients(query);
+    } else {
+      return _searchComplex(query, filters);
+    }
+  }
 
-    // 1. Handle Sort
+  /// Gets full recipe details.
+  /// Logic: Checks Cache -> If "Full" (has ingredients), return it.
+  /// If "Lite" (no ingredients) or Missing, fetch from API & update cache.
+  Future<Recipe> getRecipeDetails(int recipeId) async {
+    final cacheDoc = _firestore.collection('recipes').doc(recipeId.toString());
+    final snapshot = await cacheDoc.get();
+
+    // 1. Check Cache
+    if (snapshot.exists && snapshot.data() != null) {
+      final cachedRecipe = Recipe.fromSpoonacularJson(snapshot.data()!);
+
+      // SMART CHECK: If it has ingredients, it's a Full Record.
+      if (cachedRecipe.ingredients.isNotEmpty) {
+        return cachedRecipe; // Return immediately (0 Cost)
+      }
+      // If ingredients are empty, it's a "Lite" record from a cheap search.
+      // We fall through to fetch the full details below.
+    }
+
+    // 2. Fetch Full Details from API (1 Point)
+    final recipeJson = await _fetchFromSpoonacular(recipeId);
+
+    // 3. Save to Cache (Upgrades Lite -> Full)
+    await cacheDoc.set(recipeJson);
+
+    return Recipe.fromSpoonacularJson(recipeJson);
+  }
+
+  // ===========================================================================
+  // 🟡 PRIVATE HELPERS (Internal Logic)
+  // ===========================================================================
+
+  /// Option A: Ingredient Search (e.g. "apple,flour")
+  /// Returns recipes that match ingredients. (No Time/Rating data)
+  Future<List<Recipe>> _searchByIngredients(String ingredients) async {
+    final uri = Uri.parse(
+        'https://api.spoonacular.com/recipes/findByIngredients?apiKey=$_spoonacularApiKey&ingredients=$ingredients&number=10&ranking=2&ignorePantry=true');
+
+    final response = await _client.get(uri);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      // Map raw list to Recipe objects
+      return data.map((json) {
+        return Recipe(
+          id: json['id'],
+          title: json['title'],
+          image: json['image'],
+          rating: null,
+          time: null,
+          // Capture used/missed counts for the UI badges
+          usedIngredientCount: json['usedIngredientCount'] ?? 0,
+          missedIngredientCount: json['missedIngredientCount'] ?? 0,
+        );
+      }).toList();
+    } else {
+      throw Exception('Ingredient search failed: ${response.statusCode}');
+    }
+  }
+
+  /// Option B: Text/Filter Search (e.g. "Pasta", "Keto")
+  /// Uses "Cheap Mode" (number=20, no details) to save quota.
+  Future<List<Recipe>> _searchComplex(String query, FilterState filters) async {
+    var queryString = 'apiKey=$_spoonacularApiKey&query=$query&number=20';
+
+    // Apply Filters
     if (filters.sortBy.isNotEmpty) {
       switch (filters.sortBy) {
         case 'Prep Time':
           queryString += '&sort=time&sortDirection=asc';
           break;
         case 'Ratings':
-          queryString +=
-              '&sort=popularity'; // Spoonacular uses popularity/healthiness
-          break;
-        case 'Popularity':
           queryString += '&sort=popularity';
+          break;
+        case 'Servings':
+          queryString += '&sort=servings&sortDirection=asc';
           break;
       }
     }
-
-    // 2. Handle Cuisines
     if (filters.cuisines.isNotEmpty) {
       queryString += '&cuisine=${filters.cuisines.join(',')}';
     }
-
-    // 3. Handle Tags (Diet/Type)
     if (filters.tags.isNotEmpty) {
       queryString += '&diet=${filters.tags.join(',')}';
     }
@@ -82,65 +133,47 @@ class RecipeService {
 
     final response = await _client.get(uri);
 
-    //  LOG THE QUOTA
-    _logQuota(response);
-
     if (response.statusCode == 200) {
       final data = json.decode(response.body) as Map<String, dynamic>;
       final results = data['results'] as List<dynamic>;
 
-      // Assign to a variable 'recipes' instead of returning immediately
-      List<Recipe> recipes = results
-          .map((json) =>
-              Recipe.fromSpoonacularSearchJson(json as Map<String, dynamic>))
-          .toList();
+      // Cache these results to Firestore so they appear in "Recent" lists
+      final batch = _firestore.batch();
+      List<Recipe> recipes = [];
+
+      for (var result in results) {
+        final recipe =
+            Recipe.fromSpoonacularJson(result as Map<String, dynamic>);
+        recipes.add(recipe);
+
+        final docRef =
+            _firestore.collection('recipes').doc(recipe.id.toString());
+        batch.set(docRef, result);
+      }
+      await batch.commit();
 
       return recipes;
     } else {
-      throw Exception('Failed to search recipes: ${response.statusCode}');
+      throw Exception('Search failed: ${response.statusCode}');
     }
   }
 
-  /// Fetches full recipe details, following the capstone caching logic.
-  Future<Recipe> getRecipeDetails(int recipeId) async {
-    final cacheDoc = _firestore.collection('recipes').doc(recipeId.toString());
-
-    // 1. Check Firebase Cache
-    final snapshot = await cacheDoc.get();
-    if (snapshot.exists && snapshot.data() != null) {
-      // Recipe is in cache! Cost: 0 points.
-      return Recipe.fromSpoonacularJson(snapshot.data()!);
-    }
-
-    // 2. Not in cache. Fetch from Spoonacular. Cost: 1 point.
-    final recipe = await _fetchFromSpoonacular(recipeId);
-
-    // 3. Save to Firebase Cache for next time
-    await cacheDoc.set(recipe);
-
-    return Recipe.fromSpoonacularJson(recipe);
-  }
-
-  /// Private helper to call the Spoonacular API.
+  /// Helper to fetch single recipe details
   Future<Map<String, dynamic>> _fetchFromSpoonacular(int recipeId) async {
     final uri = Uri.parse(
         'https://api.spoonacular.com/recipes/$recipeId/information?apiKey=$_spoonacularApiKey&includeNutrition=false');
 
     final response = await _client.get(uri);
-    _logQuota(response);
 
     if (response.statusCode == 200) {
       return json.decode(response.body) as Map<String, dynamic>;
-    } else if (response.statusCode == 402) {
-      // 402 = Quota reached
-      throw Exception('API Quota Reached. Please try again tomorrow.');
     } else {
       throw Exception('Failed to load recipe: ${response.statusCode}');
     }
   }
 }
 
-// --- PROVIDERS ---
+// --- PROVIDER ---
 final recipeServiceProvider = Provider<RecipeService>((ref) {
   return RecipeService();
 });

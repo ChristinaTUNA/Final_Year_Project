@@ -14,11 +14,10 @@ class FilterBottomSheet extends ConsumerStatefulWidget {
 }
 
 class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
-  // Local state for the sheet (before applying)
   late FilterState _localState;
 
   // Define Options
-  final _sortOptions = ['Prep Time', 'Servings', 'Ratings', 'Popularity'];
+  final _sortOptions = ['Prep Time', 'Servings', 'Ratings'];
   final _cuisineOptions = [
     'Fast food',
     'Dessert',

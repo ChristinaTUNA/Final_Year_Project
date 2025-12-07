@@ -7,7 +7,7 @@ class HomeRecipeCard extends StatelessWidget {
   final Recipe recipe;
 
   const HomeRecipeCard({super.key, required this.recipe});
-//TODO: subtitle 1 & 2
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(

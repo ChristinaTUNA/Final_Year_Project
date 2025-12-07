@@ -21,30 +21,19 @@ class HomeCategoryChips extends ConsumerWidget {
     ];
 
     void onCategoryTap(String category) {
-      // Step A: Clear any existing search text to avoid conflicts
       ref.read(exploreSearchQueryProvider.notifier).state = '';
-
-      // Step B: Construct the specific filter
       FilterState newFilter;
-
       if (category == 'Vegan') {
-        // 'Vegan' is a Diet/Tag, not a Cuisine
         newFilter = const FilterState(tags: {'Vegan'});
       } else {
-        // The rest are Cuisines
         newFilter = FilterState(cuisines: {category});
       }
-
-      // Step C: Update the Explore Provider
-      // This triggers the API call immediately in the background
       ref.read(exploreFilterStateProvider.notifier).state = newFilter;
-
-      // Step D: Navigate to Explore Tab (Index 1)
       ref.read(rootShellProvider.notifier).setIndex(1);
     }
 
     return SizedBox(
-      height: 100, // Fixed height for the row
+      height: 100,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
@@ -57,13 +46,12 @@ class HomeCategoryChips extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                // The Rounded Square Box
                 Container(
                   width: 90,
                   height: 100,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16), // Rounded Corners
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Center(
                     child: Column(

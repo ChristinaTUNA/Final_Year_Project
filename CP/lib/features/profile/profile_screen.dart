@@ -11,7 +11,6 @@ class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   void _onPushEditProfile(BuildContext context) {
-    // Navigate to the Edit Profile route we created
     Navigator.of(context).pushNamed('/edit_profile');
   }
 
@@ -41,38 +40,53 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: Padding(
-          padding: AppSpacing.pHorizontalLg.copyWith(top: AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Profile',
-                style: textTheme.displayMedium,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              userAsync.when(
-                data: (user) => ProfileHeader(
-                  user: user,
-                  onEdit: () => _onPushEditProfile(context),
+        child: CustomScrollView(
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: AppSpacing.pHorizontalLg.copyWith(top: AppSpacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Profile',
+                      style: textTheme.displayLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    userAsync.when(
+                      data: (user) => ProfileHeader(
+                        user: user,
+                        onEdit: () => _onPushEditProfile(context),
+                      ),
+                      loading: () => const SizedBox(
+                        height: 80,
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                      // Error state handling
+                      error: (err, stack) =>
+                          const Text('Error loading profile'),
+                    ),
+
+                    const SizedBox(height: AppSpacing.lg),
+
+                    ProfileMenuList(
+                      onPushPlaceholder: (title) =>
+                          _onPushPlaceholder(context, title),
+                    ),
+
+                    const Spacer(),
+
+                    LogoutButton(
+                      onLogout: () => _onLogout(context, ref),
+                    ),
+                    const SizedBox(height: AppSpacing.xl), // Bottom padding
+                  ],
                 ),
-                loading: () => const SizedBox(
-                  height: 80,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (err, stack) => Text('Error: ${err.toString()}'),
               ),
-              const SizedBox(height: AppSpacing.md),
-              ProfileMenuList(
-                onPushPlaceholder: (title) =>
-                    _onPushPlaceholder(context, title),
-              ),
-              const Spacer(),
-              LogoutButton(
-                onLogout: () => _onLogout(context, ref),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

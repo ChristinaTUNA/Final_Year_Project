@@ -7,7 +7,7 @@ class FilterState extends Equatable {
   final Set<String> tags;
 
   const FilterState({
-    this.sortBy = '', // 'Prep Time', 'Servings', 'Ratings', 'Popularity'
+    this.sortBy = '', // 'Prep Time', 'Servings', 'Ratings'
     this.cuisines = const {},
     this.tags = const {},
   });

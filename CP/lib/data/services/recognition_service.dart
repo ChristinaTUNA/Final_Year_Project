@@ -88,6 +88,8 @@ If you see no ingredients, return an empty array [].
   }
 }
 
+//TODO Preprocess image to enhance recognition accuracy
+// TODO POST PROCESS STRING RESPONSE TO EXTRACT INGREDIENTS MORE CLEANLY
 // --- PROVIDER ---
 final imageRecognitionServiceProvider =
     Provider<ImageRecognitionService>((ref) {

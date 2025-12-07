@@ -32,19 +32,19 @@ class ProfileMenuList extends StatelessWidget {
           ProfileTile(
             icon: Icons.bookmark_outline,
             label: 'My Favourites',
-            onTap: () => onPushPlaceholder('My Favourites'),
-          ), //TODO: add bookmark to my favourite
+            onTap: () => Navigator.of(context).pushNamed('/my_favorites'),
+          ),
           const Divider(height: 10, color: AppColors.divider),
           ProfileTile(
             icon: Icons.help_outline,
             label: 'Help',
-            onTap: () => onPushPlaceholder('Help'),
+            onTap: () => Navigator.of(context).pushNamed('/help'),
           ),
           const Divider(height: 10, color: AppColors.divider),
           ProfileTile(
             icon: Icons.info_outline,
             label: 'About',
-            onTap: () => onPushPlaceholder('About'),
+            onTap: () => Navigator.of(context).pushNamed('/about'),
           ),
         ],
       ),

@@ -23,21 +23,25 @@ class CommonRecipeCard extends StatelessWidget {
         ? AppColors.background
         : AppColors.cardBackgroundDark;
 
-    // 🧠 SMART LOGIC:
-    // Check if this recipe has "Pantry Data" (from the scanner)
+    // Detect if this is a "Cheap" Pantry search result
     final bool isPantryMatch =
         (recipe.usedIngredientCount > 0 || recipe.missedIngredientCount > 0);
+
+    // Check if we even HAVE time/rating data (from expensive search)
+    final bool hasDetails = recipe.time != null && recipe.rating != null;
 
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pushNamed('/recipe', arguments: recipe.id);
       },
       child: Container(
+        constraints: const BoxConstraints(minHeight: 200),
         decoration: AppDecorations.elevatedCardStyle.copyWith(
           color: bgColor,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // --- 1. Image Section ---
             ClipRRect(
@@ -47,34 +51,48 @@ class CommonRecipeCard extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  Image.network(
-                    recipe.image,
-                    height: imageHeight,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (ctx, err, st) => Container(
+                  Hero(
+                    tag: 'recipe_image_${recipe.id}',
+                    child: Image.network(
+                      recipe.image,
                       height: imageHeight,
                       width: double.infinity,
-                      color: AppColors.backgroundNeutral,
-                      child: const Icon(Icons.image_not_supported_outlined),
+                      fit: BoxFit.cover,
+                      errorBuilder: (ctx, err, st) => Container(
+                        height: imageHeight,
+                        width: double.infinity,
+                        color: AppColors.backgroundNeutral,
+                        child: const Icon(Icons.image_not_supported_outlined),
+                      ),
                     ),
                   ),
 
-                  // 💡 FEATURE: "Missing Ingredients" Badge
-                  // Only shows if this is a pantry match and you are missing items
-                  if (isPantryMatch && recipe.missedIngredientCount > 0)
+                  // 💡 PANTRY BADGE (Top Right)
+                  if (isPantryMatch)
                     Positioned(
                       top: 8,
                       right: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                            horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.redAccent.withValues(alpha: .9),
+                          // Green if you have almost everything, Red if missing lots
+                          color: recipe.missedIngredientCount == 0
+                              ? Colors.green.withValues(alpha: 0.95)
+                              : AppColors.primary.withValues(alpha: 0.95),
                           borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            )
+                          ],
                         ),
                         child: Text(
-                          'Missing: ${recipe.missedIngredientCount}',
+                          recipe.missedIngredientCount == 0
+                              ? 'Fully Matched!'
+                              : 'Missing ${recipe.missedIngredientCount} items',
                           style: textTheme.labelSmall?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -88,69 +106,102 @@ class CommonRecipeCard extends StatelessWidget {
 
             // --- 2. Content Section ---
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.sm),
+              padding: const EdgeInsets.all(AppSpacing.sm).copyWith(
+                top: AppSpacing.md,
+                bottom: AppSpacing.md,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Title
                   Text(
                     recipe.title,
-                    style: textTheme.titleMedium,
-                    maxLines: 1,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: AppSpacing.xs),
+                  const SizedBox(height: AppSpacing.sm),
 
-                  // Metadata Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // LEFT SIDE: Time or "You have X ingredients"
-                      if (isPantryMatch)
-                        // If pantry match, show "You have X"
-                        Expanded(
+                  // ADAPTIVE FOOTER
+                  if (isPantryMatch)
+                    // --- OPTION A: Pantry View (2 Lines) ---
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Line 1: Positive reinforcement ("You have 5")
+                        Row(
+                          children: [
+                            const Icon(Icons.check_circle_outline,
+                                size: 16, color: Colors.green),
+                            const SizedBox(width: 4),
+                            Text(
+                              'You have ${recipe.usedIngredientCount} items',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: Colors.green[700],
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6), // Spacing between lines
+
+                        // Line 2: Call to Action (Aligned Right for cleaner look)
+                        Align(
+                          alignment: Alignment.centerRight,
                           child: Text(
-                            'You have ${recipe.usedIngredientCount} items',
-                            style: textTheme.bodyMedium?.copyWith(
-                              color:
-                                  AppColors.primary, // Highlight in Green/Red
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                            'View Recipe ›',
+                            style: textTheme.labelSmall?.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        )
-                      else
-                        // Otherwise, show standard Time
-                        Expanded(
-                          child: Row(
-                            children: [
-                              const Icon(Icons.access_time,
-                                  size: 14, color: AppColors.textLightGray),
-                              const SizedBox(width: 4),
-                              Text(
-                                recipe.time ?? 'N/A',
-                                style: textTheme.bodyMedium,
-                              ),
-                            ],
-                          ),
                         ),
-
-                      // RIGHT SIDE: Rating
-                      Row(
-                        children: [
-                          const Icon(Icons.star,
-                              color: AppColors.rating, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            recipe.rating != null && recipe.rating! > 0
-                                ? recipe.rating!.toStringAsFixed(1)
-                                : 'N/A',
-                            style: textTheme.bodyMedium,
-                          )
-                        ],
-                      )
-                    ],
-                  ),
+                      ],
+                    )
+                  else if (hasDetails)
+                    // --- OPTION B: Standard View (Full Data) ---
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time_rounded,
+                                size: 16, color: AppColors.textLightGray),
+                            const SizedBox(width: 4),
+                            Text(
+                              recipe.time ?? '',
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: AppColors.textGray,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            const Icon(Icons.star_rounded,
+                                color: Colors.amber, size: 18),
+                            const SizedBox(width: 2),
+                            Text(
+                              recipe.rating?.toStringAsFixed(1) ?? '',
+                              style: textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            )
+                          ],
+                        )
+                      ],
+                    )
+                  else
+                    // --- OPTION C: Fallback (Just Text) ---
+                    Text(
+                      'Tap to view details',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: AppColors.textLightGray,
+                      ),
+                    ),
                 ],
               ),
             )

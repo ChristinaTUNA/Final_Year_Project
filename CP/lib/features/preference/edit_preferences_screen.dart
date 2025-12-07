@@ -75,7 +75,7 @@ class _MyPreferencesScreenState extends ConsumerState<MyPreferencesScreen> {
           children: [
             // --- SECTION 1: DIETARY ---
             Text('Dietary Requirements', style: textTheme.titleLarge),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -96,11 +96,11 @@ class _MyPreferencesScreenState extends ConsumerState<MyPreferencesScreen> {
               }).toList(),
             ),
 
-            const Divider(height: 32),
+            const Divider(height: 50),
 
             // --- SECTION 2: COOKING TIME ---
             Text('Cooking Time', style: textTheme.titleLarge),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -119,11 +119,11 @@ class _MyPreferencesScreenState extends ConsumerState<MyPreferencesScreen> {
               }).toList(),
             ),
 
-            const Divider(height: 32),
+            const Divider(height: 50),
 
             // --- SECTION 3: SERVINGS ---
             Text('Servings', style: textTheme.titleLarge),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: 8,
               runSpacing: 8,

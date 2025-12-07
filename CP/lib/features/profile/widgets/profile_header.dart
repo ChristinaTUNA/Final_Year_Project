@@ -14,15 +14,28 @@ class ProfileHeader extends StatelessWidget {
 
   // Smart Name Extraction Logic
   String get _displayName {
+    // 1. Handle Guest/Null
     if (user == null) return 'Guest';
+
+    // 2. Handle Display Name (if set)
     if (user!.displayName != null && user!.displayName!.isNotEmpty) {
       return user!.displayName!;
     }
-    // Fallback: Use part of email
-    if (user!.email != null) {
-      final name = user!.email!.split('@')[0];
-      return "${name[0].toUpperCase()}${name.substring(1)}";
+
+    // 3. Handle Email Fallback
+    if (user!.email != null && user!.email!.isNotEmpty) {
+      // Split by @ to get username
+      final parts = user!.email!.split('@');
+      if (parts.isNotEmpty && parts[0].isNotEmpty) {
+        final name = parts[0];
+        // Safety check: Ensure name has at least 1 char before accessing [0]
+        if (name.length > 1) {
+          return "${name[0].toUpperCase()}${name.substring(1)}";
+        }
+        return name.toUpperCase();
+      }
     }
+
     return 'Chef';
   }
 

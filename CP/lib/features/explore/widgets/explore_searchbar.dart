@@ -57,7 +57,7 @@ class _ExploreSearchBarState extends ConsumerState<ExploreSearchBar> {
               autofocus: false,
               decoration: const InputDecoration(
                 icon: Icon(Icons.search, color: AppColors.primary),
-                hintText: 'search for food...',
+                hintText: 'search with ingredients...',
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,

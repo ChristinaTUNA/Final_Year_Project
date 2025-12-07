@@ -26,7 +26,6 @@ class ExploreViewModel extends AsyncNotifier<List<Recipe>> {
     final query = ref.watch(exploreSearchQueryProvider);
     final filters = ref.watch(exploreFilterStateProvider);
     final recipeService = ref.watch(recipeServiceProvider);
-
     final dbService = ref.watch(userDatabaseServiceProvider);
     final recommendationEngine = ref.watch(recommendationServiceProvider);
 
