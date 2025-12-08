@@ -4,94 +4,104 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../models/scanned_ingredient.dart';
 
-const String _openRouterApiKey =
-    "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";
+const String _googleApiKey = "AIzaSyA9hUQKuCNF7vuWo1hRZqc5F3gy3neWrqE";
 
-class ImageRecognitionService {
+class RecognitionService {
   final http.Client _client = http.Client();
 
-  final String _systemPrompt = """
-Analyze this image of a kitchen counter, pantry, or fridge.
-Identify ONLY the food ingredients.
-Return your answer as a valid JSON array of objects, where each object has a simplified format of "name" (single word/phrase) ,"quantity", and "category".
-Example: [{"name": "red onion", "quantity": "1", "category": "Vegetable"}, {"name": "chicken breast", quantity": "2", "category": "Poultry"}]
-If you see no ingredients, return an empty array [].
-""";
-
-  /// Takes an image file, converts it to base64, and sends it to
-  /// the OpenRouter Gemini API for analysis.
-  String _normalizeIngredient(String rawName) {
-    return rawName.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').trim();
-  }
-
+  /// Analyzes image using Gemini 2.5 Flash (Direct Google API)
   Future<List<ScannedIngredient>> analyzeImage(XFile imageFile) async {
+    // 1. Convert image to Base64
     final imageBytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(imageBytes);
+
+    // Ensure we have a valid mime type (fallback to jpeg if null)
     final mimeType = imageFile.mimeType ?? 'image/jpeg';
-    final imageUrl = 'data:$mimeType;base64,$base64Image';
 
-    final uri = Uri.parse('https://openrouter.ai/api/v1/chat/completions');
+    // 2. The Smart Prompt
+    const prompt = """
+    Look at this image of food/pantry items. 
+    Return a JSON list of ingredients found.
+    Format: [{"name": "item name", "category": "category name", "quantity": "estimated quantity"}]
+    
+    Rules:
+    - name: Singular, simple (e.g. "Apple", not "Red Apples").
+    - category: General type (Produce, Dairy, Meat, Pantry, etc).
+    - quantity: Estimate based on visual (e.g. "3", "1 bottle", "500g"). Default to "1".
+    - Ignore non-food items.
+    - Output ONLY raw JSON. No markdown.
+    """;
 
-    final headers = {
-      'Authorization': 'Bearer $_openRouterApiKey',
-      'Content-Type': 'application/json',
-    };
+    // 3. Prepare Request for Google AI API
+
+    final uri = Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$_googleApiKey');
 
     final body = json.encode({
-      "model": "x-ai/grok-4.1-fast:free",
-      "messages": [
+      "contents": [
         {
-          "role": "user",
-          "content": [
+          "parts": [
+            {"text": prompt},
             {
-              "type": "text",
-              "text": _systemPrompt,
-            },
-            {
-              "type": "image_url",
-              "image_url": {"url": imageUrl},
+              "inline_data": {"mime_type": mimeType, "data": base64Image}
             }
           ]
         }
-      ]
+      ],
+      "generationConfig": {
+        "response_mime_type": "application/json" // Enforce JSON mode
+      }
     });
 
     try {
-      final response = await _client.post(uri, headers: headers, body: body);
+      final response = await _client.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body) as Map<String, dynamic>;
-        final content = data['choices'][0]['message']['content'] as String;
+        final data = json.decode(response.body);
 
-        // Clean up markdown code blocks if Gemini sends them
-        final cleanContent =
-            content.replaceAll('```json', '').replaceAll('```', '');
+        // 4. Parse Gemini Response
+        if (data['candidates'] != null &&
+            (data['candidates'] as List).isNotEmpty) {
+          final contentText =
+              data['candidates'][0]['content']['parts'][0]['text'];
 
-        final List<dynamic> ingredientListJson = json.decode(cleanContent);
+          // Clean up any potential markdown backticks (just in case)
+          final cleanJson = contentText
+              .replaceAll('```json', '')
+              .replaceAll('```', '')
+              .trim();
 
-        return ingredientListJson.map((json) {
-          final rawName = json['name'] as String? ?? 'Unknown';
-          final cleanName = _normalizeIngredient(rawName);
-
-          return ScannedIngredient(
-            name: cleanName,
-            category: json['category'] as String? ?? 'Uncategorized',
-            quantity: json['quantity'] as String? ?? '1',
-          );
-        }).toList();
+          try {
+            final List<dynamic> jsonList = json.decode(cleanJson);
+            return jsonList.map((item) {
+              return ScannedIngredient(
+                name: item['name'] ?? 'Unknown',
+                category: item['category'] ?? 'Pantry',
+                quantity: item['quantity'] ?? '1',
+              );
+            }).toList();
+          } catch (e) {
+            // If JSON parsing fails (rare with 2.5 Flash + json mode), return empty
+            throw Exception('JSON Parse Error: $e');
+          }
+        }
+        return [];
       } else {
-        throw Exception('Failed to analyze image: ${response.statusCode}');
+        // Log the full error body to help debugging
+
+        throw Exception('Gemini API Error: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error sending request to OpenRouter: $e');
+      throw Exception('AI Analysis Failed: $e');
     }
   }
 }
 
-//TODO Preprocess image to enhance recognition accuracy
-// TODO POST PROCESS STRING RESPONSE TO EXTRACT INGREDIENTS MORE CLEANLY
 // --- PROVIDER ---
-final imageRecognitionServiceProvider =
-    Provider<ImageRecognitionService>((ref) {
-  return ImageRecognitionService();
+final imageRecognitionServiceProvider = Provider<RecognitionService>((ref) {
+  return RecognitionService();
 });
