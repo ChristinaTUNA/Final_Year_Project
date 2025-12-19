@@ -26,22 +26,6 @@
 
 ---
 
-## 🎯 Objectives
-
-- **Automate Inventory Tracking**  
-  Multimodal AI recognizes and categorizes ingredients from raw images.
-
-- **Minimize Food Waste**  
-  Recipes are prioritized when they use **>50%** of existing pantry items.
-
-- **Personalize Experience**  
-  Weighted scoring algorithm considers diet, time, and pantry match.
-
-- **Optimize Performance**  
-  Lite-to-Full caching strategy reduces API latency and cost.
-
----
-
 ## 📊 Data Sources & APIs
 
 **Hybrid real-time + cached architecture**
@@ -121,18 +105,6 @@ Score = (PantryMatch × 0.5) + (DietPref × 0.3) + (TimePref × 0.2)
 
 ---
 
-## 📈 Results Summary
-
-| Metric                     | Result     | Target | Status   |
-|----------------------------|------------|--------|----------|
-| UAT Ease of Use            | 4.6 / 5.0  | > 4.0  | Exceeded |
-| UAT Functionality          | 4.5 / 5.0  | > 4.0  | Exceeded |
-| AI Scanning Latency        | ~8.0s      | < 10s  | Achieved |
-| Recipe Load Time           | < 200ms    | < 1s   | Achieved |
-| API Cost Reduction         | ~65%       | > 50%  | Achieved |
-
----
-
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -159,6 +131,20 @@ flutter pub get
 ```bash
 flutter run
 ```
+---
+
+## 📲 Download the App
+
+You can download the latest version of **CooKit** for Android directly from the Releases page.
+
+1.  **[Click here to go to the Latest Release](https://github.com/ChristinaTUNA/cookit/releases/latest)**
+2.  Scroll down to the **Assets** section.
+3.  Click on **`app-release.apk`** to download.
+4.  Open the file on your Android device to install.
+
+> **Note:** Since this is a student project and not on the Play Store, you may need to allow "Install from Unknown Sources" in your phone settings.
+
+---
 
 ## 🔧 Future Improvements
 
