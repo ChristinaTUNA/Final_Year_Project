@@ -149,13 +149,10 @@ flutter pub get
 ```
 
 ### Configure API Keys
-- Add **Spoonacular API Key** in:
+- Create a file named .env in the root directory of the project and add your API keys:
   ```bash
-  lib/data/services/recipe_service.dart
-  ```
-- Add **Google AI Studio Key** in:
-  ```bash
-  lib/data/services/recognition_service.dart
+  SPOONACULAR_API_KEY=your_spoonacular_key_here
+  GOOGLE_AI_KEY=your_gemini_api_key_here
   ```
 
 ### Run the App
