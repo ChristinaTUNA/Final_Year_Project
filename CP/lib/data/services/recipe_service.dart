@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import '../models/recipe_model.dart';
 import 'package:cookit/data/models/filter_state.dart';
 
-const String _spoonacularApiKey = "35d09c6f61894bbfa03304a51c8b6269";
+const String _spoonacularApiKey = "ENTER API KEY HERE";
 
 class RecipeService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
