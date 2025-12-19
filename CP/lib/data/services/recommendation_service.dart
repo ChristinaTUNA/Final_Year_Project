@@ -46,9 +46,7 @@ class RecommendationService {
         final mins = _parseMinutes(e.key.time);
         return mins > 0 && mins <= 20;
       }).toList();
-    } else if (mode == 'recent') {
-      // No filtering for history, just sorting if needed
-    }
+    } else if (mode == 'recent') {}
 
     // 3. Sort by Total Score
     filtered.sort((a, b) => b.value.totalScore.compareTo(a.value.totalScore));

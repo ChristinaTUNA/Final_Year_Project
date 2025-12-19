@@ -71,7 +71,7 @@ class AboutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '© 2024 CooKit Team',
+                '© 2025 CooKit Team',
                 style: textTheme.bodySmall
                     ?.copyWith(color: AppColors.textLightGray),
               ),

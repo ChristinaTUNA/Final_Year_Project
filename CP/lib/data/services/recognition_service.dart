@@ -8,8 +8,6 @@ const String _googleApiKey = "AIzaSyA9hUQKuCNF7vuWo1hRZqc5F3gy3neWrqE";
 
 class RecognitionService {
   final http.Client _client = http.Client();
-
-  /// Analyzes image using Gemini 2.5 Flash (Direct Google API)
   Future<List<ScannedIngredient>> analyzeImage(XFile imageFile) async {
     // 1. Convert image to Base64
     final imageBytes = await imageFile.readAsBytes();
@@ -18,7 +16,7 @@ class RecognitionService {
     // Ensure we have a valid mime type (fallback to jpeg if null)
     final mimeType = imageFile.mimeType ?? 'image/jpeg';
 
-    // 2. The Smart Prompt
+    // 2. Craft Prompt
     const prompt = """
     Look at this image of food/pantry items. 
     Return a JSON list of ingredients found.
@@ -33,7 +31,6 @@ class RecognitionService {
     """;
 
     // 3. Prepare Request for Google AI API
-
     final uri = Uri.parse(
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$_googleApiKey');
 
@@ -48,9 +45,7 @@ class RecognitionService {
           ]
         }
       ],
-      "generationConfig": {
-        "response_mime_type": "application/json" // Enforce JSON mode
-      }
+      "generationConfig": {"response_mime_type": "application/json"}
     });
 
     try {
@@ -68,8 +63,6 @@ class RecognitionService {
             (data['candidates'] as List).isNotEmpty) {
           final contentText =
               data['candidates'][0]['content']['parts'][0]['text'];
-
-          // Clean up any potential markdown backticks (just in case)
           final cleanJson = contentText
               .replaceAll('```json', '')
               .replaceAll('```', '')
@@ -85,14 +78,11 @@ class RecognitionService {
               );
             }).toList();
           } catch (e) {
-            // If JSON parsing fails (rare with 2.5 Flash + json mode), return empty
             throw Exception('JSON Parse Error: $e');
           }
         }
         return [];
       } else {
-        // Log the full error body to help debugging
-
         throw Exception('Gemini API Error: ${response.statusCode}');
       }
     } catch (e) {

@@ -29,6 +29,13 @@ dependencies:
 
   # API Calls
   http: ^1.2.1
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/chef_mato.png"
+  adaptive_icon_background: "#ffffff"
 
 dev_dependencies:
   flutter_test:
