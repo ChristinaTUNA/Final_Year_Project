@@ -137,7 +137,7 @@ flutter run
 
 You can download the latest version of **CooKit** for Android directly from the Releases page.
 
-1.  **[Click here to go to the Latest Release](https://github.com/ChristinaTUNA/cookit/releases/latest)**
+1.  **[Click here to go to the Latest Release](https://github.com/ChristinaTUNA/Final_Year_Project/releases/latest)**
 2.  Scroll down to the **Assets** section.
 3.  Click on **`app-release.apk`** to download.
 4.  Open the file on your Android device to install.
