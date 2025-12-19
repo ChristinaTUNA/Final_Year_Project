@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../models/scanned_ingredient.dart';
 
-const String _googleApiKey = "AIzaSyA9hUQKuCNF7vuWo1hRZqc5F3gy3neWrqE";
+const String _googleApiKey = "ENTER API KEY HERE";
 
 class RecognitionService {
   final http.Client _client = http.Client();
