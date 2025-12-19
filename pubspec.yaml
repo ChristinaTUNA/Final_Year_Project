@@ -1,0 +1,58 @@
+name: cookit
+description: Smart Grocery Assistant - CooKit App
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_svg: ^2.2.2
+
+  # Core & Utility Packages
+  cupertino_icons: ^1.0.2
+  google_fonts: ^6.2.1
+  flutter_riverpod: ^2.5.1
+  equatable: ^2.0.5
+  image_picker: ^0.8.7+5
+  camera: ^0.11.3
+
+  # Firebase
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
+  cloud_firestore: ^6.1.0
+
+  # Google Sign In
+  google_sign_in: ^7.2.0
+
+  # API Calls
+  http: ^1.2.1
+  flutter_launcher_icons: ^0.14.4
+  flutter_dotenv: ^6.0.0
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/chef_mato.png"
+  adaptive_icon_background: "#ffffff"
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+  # Riverpod Tooling
+  riverpod_lint: ^2.3.10
+  custom_lint: ^0.6.4
+
+flutter:
+  uses-material-design: true
+
+  # --- Asset Paths ---
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/json/
+    - .env
